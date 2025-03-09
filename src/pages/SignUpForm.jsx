@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import classNames from "classnames";
 
 /** Utility to combine Tailwind classes. */
@@ -14,7 +14,7 @@ function Button({ onClick, disabled, className, children, ...props }) {
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={cn(
-        "w-36 px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 " +
+        " px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 " +
           "focus:ring-offset-2 transition-colors text-[16px]",
         className
       )}
@@ -42,14 +42,34 @@ export default function SignUpForm() {
     { id: 0, title: "Confirmation & Submission", isOpen: false, isFinal: true },
   ]);
 
+  // State for the date picker (Step 6)
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   const [currentStep, setCurrentStep] = useState(1);
 
   // Include fields in formData for Steps 2 & 3
   const [formData, setFormData] = useState({
     // Step 1 fields:
     connectionType: "", // "moveIn" or "transfer"
-    products: [],       // e.g. ["electricity","gas","broadband"]
-    customerType: "",   // "residential" or "business"
+    products: [], // e.g. ["electricity","gas","broadband"]
+    customerType: "", // "residential" or "business"
 
     // Step 2 fields:
     title: "",
@@ -63,12 +83,12 @@ export default function SignUpForm() {
     howDidYouHear: "",
 
     // Step 3 fields:
-    isOwner: null,   // true or false
-    hasSolar: null,  // true or false
+    isOwner: null, // true or false
+    hasSolar: null, // true or false
 
     // Step 4 fields:
     dob: "",
-    verificationMethod: "",  // e.g. "Driver's License", "Passport", "Medicare"
+    verificationMethod: "", // e.g. "Driver's License", "Passport", "Medicare"
     idNumber: "",
     idExpiry: "",
     homePhone: "",
@@ -83,6 +103,20 @@ export default function SignUpForm() {
     secondaryMobile: "",
     secondaryHomePhone: "",
     secondaryEmail: "",
+
+    // Step 6 fields:
+    moveInDate: null,
+    hasBeenDisconnected12Months: null, // true / false
+    hasBuildingElectricalWorks: null, // true / false
+    hasClearMeterAccess: null, // true / false
+
+    // Step 7 fields:
+    lifeSupport: null, // true/false
+    isConcessionHolder: null, // true/false
+    concessionType: "",
+    concessionCardNumber: "",
+    concessionCardStartDate: "",
+    concessionCardExpiryDate: "",
   });
 
   // Toggle open/close for each step
@@ -147,6 +181,62 @@ export default function SignUpForm() {
       ? "bg-[#1951A4] hover:bg-[#164685] text-white text-[16px] font-normal"
       : "bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal";
   };
+
+  // --------- Step 6: Calendar logic ----------
+  function changeMonth(offset) {
+    const newDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + offset,
+      1
+    );
+    setCurrentDate(newDate);
+  }
+
+  function handleDateSelect(dateObj) {
+    setSelectedDate(dateObj);
+    setFormData((prev) => ({ ...prev, moveInDate: dateObj }));
+    setShowCalendar(false);
+  }
+
+  function renderCalendarDays() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const slots = [];
+
+    // Fill in empty days before 1st
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      slots.push(
+        <div key={`empty-${i}`} className="text-center text-sm text-gray-300" />
+      );
+    }
+
+    // Actual days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const thisDate = new Date(year, month, day);
+      const isSelected =
+        selectedDate && thisDate.toDateString() === selectedDate.toDateString();
+
+      slots.push(
+        <div
+          key={day}
+          className={cn(
+            "flex items-center justify-center w-8 h-8 rounded-full cursor-pointer text-sm hover:bg-gray-100",
+            isSelected && "bg-[#fec600] text-white font-bold"
+          )}
+          onClick={() => handleDateSelect(thisDate)}
+        >
+          {day}
+        </div>
+      );
+    }
+
+    return slots;
+  }
+  // --------------------------------------------
 
   return (
     <div className="max-w-6xl mx-auto px-2 py-6 bg-white text-left text-gray-800">
@@ -894,8 +984,424 @@ export default function SignUpForm() {
                 </>
               )}
 
+              {/* STEP 6 CONTENT: Move-In Details (with Tailwind date picker) */}
+              {step.id === 6 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    Let&apos;s get your connection sorted. A few quick questions
+                    to ensure a smooth process!
+                  </p>
+
+                  {/* 1) Preferred Move-In Date */}
+                  <div className="mb-6">
+                    <label className="block text-[16px] font-semibold mb-2">
+                      When is your preferred move-in date?
+                    </label>
+                    <div className="relative">
+                      {/* 'Date picker input' */}
+                      <div
+                        className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer"
+                        onClick={() => setShowCalendar(!showCalendar)}
+                      >
+                        <span>
+                          {formData.moveInDate
+                            ? formData.moveInDate.toLocaleDateString("en-US", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })
+                            : "Select a date"}
+                        </span>
+                        <Calendar size={20} color="#fff" />
+                      </div>
+
+                      {showCalendar && (
+                        <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-lg">
+                          {/* Calendar header */}
+                          <div className="flex items-center justify-between p-2 border-b border-gray-100 bg-gray-50">
+                            <ChevronLeft
+                              size={16}
+                              color="#0047AB"
+                              className="cursor-pointer"
+                              onClick={() => changeMonth(-1)}
+                            />
+                            <span className="font-semibold text-[#0047ab]">
+                              {monthNames[currentDate.getMonth()]}{" "}
+                              {currentDate.getFullYear()}
+                            </span>
+                            <ChevronRight
+                              size={16}
+                              color="#0047AB"
+                              className="cursor-pointer"
+                              onClick={() => changeMonth(1)}
+                            />
+                          </div>
+
+                          {/* Weekdays + Days Grid */}
+                          <div className="grid grid-cols-7 gap-2 p-2 text-center">
+                            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(
+                              (w) => (
+                                <div
+                                  key={w}
+                                  className="text-sm font-bold text-gray-500"
+                                >
+                                  {w}
+                                </div>
+                              )
+                            )}
+                            {renderCalendarDays()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2) Disconnected > 12 months? */}
+                  <div className="mb-6 text-[20px]">
+                    <p className="font-normal mb-2">
+                      Has the electricity supply at the property been
+                      disconnected for more than 12 months?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasBeenDisconnected12Months: true,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasBeenDisconnected12Months === true,
+                          false
+                        )}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasBeenDisconnected12Months: false,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasBeenDisconnected12Months === false,
+                          false
+                        )}
+                      >
+                        No
+                      </Button>
+                    </div>
+
+                    {formData.hasBeenDisconnected12Months && (
+                      <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
+                        <p>
+                          A Certificate of Compliance (COC) for electrical work
+                          is required, and the connection may be delayed.
+                        </p>
+                        <p>
+                          Please obtain the COC and email it to{" "}
+                          <strong>info@supermovers.com.au</strong> as soon as
+                          possible.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3) Building / Electrical Works? */}
+                  <div className="mb-6 text-[20px]">
+                    <p className="font-normal mb-2">
+                      Have there been any building or electrical works
+                      completed, in progress, or scheduled before your
+                      connection date?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasBuildingElectricalWorks: true,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasBuildingElectricalWorks === true,
+                          false
+                        )}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasBuildingElectricalWorks: false,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasBuildingElectricalWorks === false,
+                          false
+                        )}
+                      >
+                        No
+                      </Button>
+                    </div>
+
+                    {formData.hasBuildingElectricalWorks && (
+                      <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
+                        <p>
+                          Our service team may need to arrange a manual
+                          connection. We&apos;ll contact you with further
+                          details.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4) Clear & Safe Access? */}
+                  <div className="mb-6 text-[20px]">
+                    <p className="font-normal mb-2">
+                      Is there clear and safe access to the electricity meter?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasClearMeterAccess: true,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasClearMeterAccess === true,
+                          false
+                        )}
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hasClearMeterAccess: false,
+                          }))
+                        }
+                        className={getToggleButtonClasses(
+                          formData.hasClearMeterAccess === false,
+                          false
+                        )}
+                      >
+                        No
+                      </Button>
+                    </div>
+
+                    {formData.hasClearMeterAccess === false && (
+                      <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
+                        <p>
+                          If your energy distributor needs to access the meter
+                          but cannot do so safely, your connection may be
+                          delayed, and additional charges may apply.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+              {step.id === 7 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    We want to ensure you have the necessary support and
+                    benefits.
+                  </p>
+
+                  {/* Life Support Question */}
+                  <p className="mb-2 text-[16px]">
+                    Do you or anyone at the property rely on life support
+                    equipment that requires electricity?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, lifeSupport: true }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.lifeSupport === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, lifeSupport: false }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.lifeSupport === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {formData.lifeSupport && (
+                    <p className="bg-yellow-100 text-sm text-gray-700 p-2 rounded mb-6">
+                      We’ll include a Life Support Form in your welcome pack for
+                      you and your medical practitioner to complete. If you have
+                      life support equipment powered by gas, please notify your
+                      current gas retailer.
+                    </p>
+                  )}
+
+                  {/* Concession Card Question */}
+                  <p className="mb-2 text-[16px]">
+                    Are you a Concession Card holder?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isConcessionHolder: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.isConcessionHolder === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isConcessionHolder: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.isConcessionHolder === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* Concession Card Details */}
+                  {formData.isConcessionHolder && (
+                    <>
+                      <p className="text-sm text-gray-500 mb-4">
+                        (If yes, please provide your concession card details.)
+                      </p>
+
+                      {/* Concession Types (buttons) */}
+                      <div className="mb-4">
+                        <p className="font-semibold text-[16px] mb-2">
+                          Concession Type:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            "Commonwealth Seniors Health Card",
+                            "DVA Gold Card (Special Rate TPI Pension Only)",
+                            "DVA Pension Concession Card",
+                            "Department of Veterans Affairs (DVA) Gold Card",
+                            "Health Care Card",
+                            "Pensioner Concession Card",
+                          ].map((type) => (
+                            <Button
+                              key={type}
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  concessionType: type,
+                                }))
+                              }
+                              className={getToggleButtonClasses(
+                                formData.concessionType === type,
+                                false
+                              )}
+                            >
+                              {type}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Concession Card Number */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Concession Card Number:
+                        </label>
+                        <input
+                          type="text"
+                          name="concessionCardNumber"
+                          value={formData.concessionCardNumber}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                       placeholder-gray-400 outline-none"
+                          placeholder="e.g. 1234-5678-XX"
+                        />
+                      </div>
+
+                      {/* Concession Card Start Date */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Concession Card Start Date:
+                        </label>
+                        <input
+                          type="text"
+                          name="concessionCardStartDate"
+                          value={formData.concessionCardStartDate}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                       placeholder-gray-400 outline-none"
+                          placeholder="DD/MM/YYYY"
+                        />
+                      </div>
+
+                      {/* Concession Card Expiry Date */}
+                      <div className="mb-6">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Concession Card Expiry Date:
+                        </label>
+                        <input
+                          type="text"
+                          name="concessionCardExpiryDate"
+                          value={formData.concessionCardExpiryDate}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                       placeholder-gray-400 outline-none"
+                          placeholder="DD/MM/YYYY"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Next Step Button */}
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
               {/* PLACEHOLDER for STEPS 6..11 (unchanged) */}
-              {![1, 2, 3, 4, 5].includes(step.id) && !step.isFinal && (
+              {![1, 2, 3, 4, 5, 6, 7].includes(step.id) && !step.isFinal && (
                 <>
                   <p className="mb-6 text-[20px]">
                     Content for <strong>{step.title}</strong> goes here.
