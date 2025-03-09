@@ -65,6 +65,24 @@ export default function SignUpForm() {
     // Step 3 fields:
     isOwner: null,   // true or false
     hasSolar: null,  // true or false
+
+    // Step 4 fields:
+    dob: "",
+    verificationMethod: "",  // e.g. "Driver's License", "Passport", "Medicare"
+    idNumber: "",
+    idExpiry: "",
+    homePhone: "",
+    mobilePhone: "",
+    confirmEmail: "",
+
+    // Step 5 fields:
+    wantsSecondaryContact: null, // true or false
+    secondaryTitle: "",
+    secondaryFirstName: "",
+    secondaryLastName: "",
+    secondaryMobile: "",
+    secondaryHomePhone: "",
+    secondaryEmail: "",
   });
 
   // Toggle open/close for each step
@@ -140,7 +158,6 @@ export default function SignUpForm() {
             className="w-full flex items-center justify-between text-left"
           >
             <h2 className="text-[32px] font-semibold">
-              {/* “Step #num” replaced text-blue-600 with text-[#1951A4] */}
               <span className="text-[#1951A4]">
                 {step.isFinal ? "Final Step" : `Step ${step.id}`}
               </span>
@@ -154,7 +171,7 @@ export default function SignUpForm() {
             />
           </button>
 
-          {/* The thinner yellow divider */}
+          {/* Thinner yellow divider */}
           <div className="border-t border-yellow-400 mt-2 mb-4" />
 
           {step.isOpen && (
@@ -222,7 +239,7 @@ export default function SignUpForm() {
                         onClick={() => handleProductSelect("water")}
                         className={getToggleButtonClasses(
                           formData.products.includes("water"),
-                          true // disabled
+                          true // disabled for Phase 1
                         )}
                       >
                         Water
@@ -231,7 +248,7 @@ export default function SignUpForm() {
                         onClick={() => handleProductSelect("broadband")}
                         className={getToggleButtonClasses(
                           formData.products.includes("broadband"),
-                          true // disabled
+                          true // disabled for Phase 1
                         )}
                       >
                         Broadband
@@ -247,9 +264,7 @@ export default function SignUpForm() {
                     <p className="font-normal mb-2">Are you signing up as a:</p>
                     <div className="flex flex-wrap gap-2">
                       <Button
-                        onClick={() =>
-                          handleCustomerTypeSelect("residential")
-                        }
+                        onClick={() => handleCustomerTypeSelect("residential")}
                         className={getToggleButtonClasses(
                           formData.customerType === "residential",
                           false
@@ -273,8 +288,7 @@ export default function SignUpForm() {
                   <div className="flex justify-center">
                     <Button
                       onClick={handleNextStep}
-                      // replaced bg-blue-600 and hover:bg-blue-700
-                      className="bg-[#1951A4] hover:bg-[#164685] text-[16px] text-white"
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                     >
                       Next Step
                     </Button>
@@ -564,8 +578,324 @@ export default function SignUpForm() {
                 </>
               )}
 
-              {/* PLACEHOLDER for STEPS 4..11 & Final Step */}
-              {![1, 2, 3].includes(step.id) && !step.isFinal && (
+              {/* STEP 4 CONTENT */}
+              {step.id === 4 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    We need to verify your identity to set up your account
+                    securely.
+                  </p>
+
+                  {/* Date of Birth */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      What&apos;s your date of birth?
+                    </label>
+                    <input
+                      type="text"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="DD/MM/YYYY"
+                    />
+                  </div>
+
+                  {/* Identity Verification Method */}
+                  <div className="mb-4">
+                    <label className="block mb-2 text-[16px] font-semibold">
+                      How would you like to verify your identity?
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Driver's License", "Passport", "Medicare"].map(
+                        (method) => (
+                          <Button
+                            key={method}
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                verificationMethod: method,
+                              }))
+                            }
+                            className={getToggleButtonClasses(
+                              formData.verificationMethod === method,
+                              false
+                            )}
+                          >
+                            {method}
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ID Number */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      Enter your selected ID number:
+                    </label>
+                    <input
+                      type="text"
+                      name="idNumber"
+                      value={formData.idNumber}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="ID number"
+                    />
+                  </div>
+
+                  {/* Expiry date */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      Expiry date of your ID?
+                    </label>
+                    <input
+                      type="text"
+                      name="idExpiry"
+                      value={formData.idExpiry}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="MM/YYYY"
+                    />
+                  </div>
+
+                  {/* Home Phone (Optional) */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      Home phone number? (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="homePhone"
+                      value={formData.homePhone}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="(07) 1234 5678"
+                    />
+                  </div>
+
+                  {/* Mobile Number */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      Mobile number?
+                    </label>
+                    <input
+                      type="text"
+                      name="mobilePhone"
+                      value={formData.mobilePhone}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="0432 123 456"
+                    />
+                  </div>
+
+                  {/* Confirm Email */}
+                  <div className="mb-4">
+                    <label className="block mb-1 text-[16px] font-semibold">
+                      Confirm your email address:
+                    </label>
+                    <input
+                      type="email"
+                      name="confirmEmail"
+                      value={formData.confirmEmail}
+                      onChange={handleInputChange}
+                      className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                 placeholder-gray-400 outline-none"
+                      placeholder="Repeat your email"
+                    />
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* STEP 5 CONTENT */}
+              {step.id === 5 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    Would you like to add a secondary contact?
+                  </p>
+                  <div className="flex gap-2 mb-6">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          wantsSecondaryContact: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.wantsSecondaryContact === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          wantsSecondaryContact: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.wantsSecondaryContact === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {formData.wantsSecondaryContact && (
+                    <>
+                      <p className="mb-4 text-[20px]">
+                        Please provide the secondary contact details.
+                      </p>
+
+                      {/* Title */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          What&apos;s their title?
+                        </label>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {["Mr", "Mrs", "Ms", "Miss", "Dr", "Mx"].map((t) => (
+                            <Button
+                              key={t}
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  secondaryTitle: t,
+                                }))
+                              }
+                              className={getToggleButtonClasses(
+                                formData.secondaryTitle === t,
+                                false
+                              )}
+                            >
+                              {t}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* First Name */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          First name?
+                        </label>
+                        <input
+                          type="text"
+                          name="secondaryFirstName"
+                          value={formData.secondaryFirstName}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                     placeholder-gray-400 outline-none"
+                          placeholder="Jane"
+                        />
+                      </div>
+
+                      {/* Last Name */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Last name?
+                        </label>
+                        <input
+                          type="text"
+                          name="secondaryLastName"
+                          value={formData.secondaryLastName}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                     placeholder-gray-400 outline-none"
+                          placeholder="Marry"
+                        />
+                      </div>
+
+                      {/* Secondary Mobile Number */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Secondary mobile number?
+                        </label>
+                        <input
+                          type="text"
+                          name="secondaryMobile"
+                          value={formData.secondaryMobile}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                     placeholder-gray-400 outline-none"
+                          placeholder="0432 111 111"
+                        />
+                      </div>
+
+                      {/* Secondary Home Phone (Optional) */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Secondary home phone number? (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          name="secondaryHomePhone"
+                          value={formData.secondaryHomePhone}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                     placeholder-gray-400 outline-none"
+                          placeholder="(07) 7654 3210"
+                        />
+                      </div>
+
+                      {/* Secondary Email Address */}
+                      <div className="mb-4">
+                        <label className="block mb-1 text-[16px] font-semibold">
+                          Secondary email address?
+                        </label>
+                        <input
+                          type="email"
+                          name="secondaryEmail"
+                          value={formData.secondaryEmail}
+                          onChange={handleInputChange}
+                          className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                     placeholder-gray-400 outline-none"
+                          placeholder="Jane@gmail.com.au"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* PLACEHOLDER for STEPS 6..11 (unchanged) */}
+              {![1, 2, 3, 4, 5].includes(step.id) && !step.isFinal && (
                 <>
                   <p className="mb-6 text-[20px]">
                     Content for <strong>{step.title}</strong> goes here.
@@ -573,7 +903,7 @@ export default function SignUpForm() {
                   <div className="flex justify-center">
                     <Button
                       onClick={handleNextStep}
-                      className="bg-[#1951A4] text-[16px] hover:bg-[#164685] text-white"
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                     >
                       Next Step
                     </Button>
