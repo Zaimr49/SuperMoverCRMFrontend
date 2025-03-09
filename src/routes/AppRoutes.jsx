@@ -3,6 +3,7 @@ import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 // import Dashboard from "../pages/Dashboard";
 import LeadCaptureForm from "../pages/LeadCaptureForm/LeadCaptureForm"
+import SignUpForm from "../pages/SignUpForm"
 
 const AppRoutes = () => {
   return (
@@ -12,6 +13,7 @@ const AppRoutes = () => {
         <Route path="/signup" element={<Signup />} />
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/lead-capture-form" element={<LeadCaptureForm />} />
+        <Route path="/signup-form" element={<SignUpForm />} />
       </Routes>
     </BrowserRouter>
   );
