@@ -1851,20 +1851,31 @@ export default function SignUpForm() {
                   </>
                 )} */}
 
-              {/* Final Step Placeholder */}
+              {/* Final Step */}
               {step.isFinal && (
                 <>
-                  <p className="mb-6 text-[20px]">
-                    Review everything and submit your form.
+
+                  {/* Sub-heading or instructions */}
+                  <p className="mb-3 text-[20px]">
+                    Review all your details and confirm they are correct.
                   </p>
-                  <div className="flex justify-center">
+
+                  {/* Confirm & Submit Button */}
+                  <div className="flex mb-4">
                     <Button
                       onClick={() => alert("Submitting...")}
                       className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                     >
-                      Submit
+                      Confirm &amp; Submit
                     </Button>
                   </div>
+
+                  {/* Completion note */}
+                  <p className="text-[16px] text-gray-700">
+                    That&apos;s it! Your sign-up is complete. You&apos;ll
+                    receive a confirmation shortly. If you have any questions,
+                    feel free to contact us.
+                  </p>
                 </>
               )}
             </div>
