@@ -257,7 +257,8 @@ export default function SignUpForm() {
   // --------------------------------------------
 
   return (
-    <div className="max-w-6xl mx-auto px-2 py-6 bg-white text-left text-gray-800">
+    // <div className="max-w-6xl mx-auto px-2 py-6 bg-white text-left text-gray-800">
+    <div className="px-2 py-6 bg-white text-left text-gray-800">
       {steps.map((step) => (
         <div key={step.id} className="mb-6">
           {/* Step heading */}
@@ -1854,7 +1855,6 @@ export default function SignUpForm() {
               {/* Final Step */}
               {step.isFinal && (
                 <>
-
                   {/* Sub-heading or instructions */}
                   <p className="mb-3 text-[20px]">
                     Review all your details and confirm they are correct.
