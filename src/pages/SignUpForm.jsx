@@ -64,7 +64,7 @@ export default function SignUpForm() {
 
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Include fields in formData for Steps 2 & 3
+  // Include fields in formData for All Steps
   const [formData, setFormData] = useState({
     // Step 1 fields:
     connectionType: "", // "moveIn" or "transfer"
@@ -117,6 +117,24 @@ export default function SignUpForm() {
     concessionCardNumber: "",
     concessionCardStartDate: "",
     concessionCardExpiryDate: "",
+
+    // Step 8:
+    medicalCoolingConcession: null, // true/false
+    concessionerDeclarationProvided: null, // true/false
+
+    // Step 9:
+    consentElectronicBills: null, // true/false
+    allCommunicationSameMethod: null, // true/false
+    usePrimaryEmailForAll: null, // true/false
+    isPostalAddressCorrect: null, // true/false
+
+    // Step 10:
+    monthlyBillsOk: null, // yes/no
+    promotionalContactConsent: null, // yes/no
+
+    // Step 11:
+    hasReviewedMarketOfferSummary: null, // or you can store “true”/“false” if they clicked
+    hasReviewedEICScript: null, // or similarly store “true”/“false”
   });
 
   // Toggle open/close for each step
@@ -1214,6 +1232,8 @@ export default function SignUpForm() {
                   </div>
                 </>
               )}
+
+              {/* STEP 7 CONTENT */}
               {step.id === 7 && (
                 <>
                   <p className="mb-4 text-[20px]">
@@ -1400,12 +1420,91 @@ export default function SignUpForm() {
                 </>
               )}
 
-              {/* PLACEHOLDER for STEPS 6..11 (unchanged) */}
-              {![1, 2, 3, 4, 5, 6, 7].includes(step.id) && !step.isFinal && (
+              {/* STEP 8 CONTENT */}
+              {step.id === 8 && (
                 <>
-                  <p className="mb-6 text-[20px]">
-                    Content for <strong>{step.title}</strong> goes here.
+                  <p className="mb-4 text-[20px]">
+                    We want to ensure you receive any eligible concessions.
                   </p>
+
+                  {/* 1) Medical Cooling Concession */}
+                  <p className="mb-2 text-[16px]">
+                    Do you have a Medical Cooling Concession?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          medicalCoolingConcession: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.medicalCoolingConcession === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          medicalCoolingConcession: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.medicalCoolingConcession === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {formData.medicalCoolingConcession && (
+                    <p className="mb-4 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
+                      Please review the attached Concession Consent Script
+                      before proceeding.
+                    </p>
+                  )}
+
+                  {/* 2) Concessioner Declaration */}
+                  <p className="mb-2 text-[16px]">
+                    Concessioner Declaration Provided?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          concessionerDeclarationProvided: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.concessionerDeclarationProvided === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          concessionerDeclarationProvided: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.concessionerDeclarationProvided === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* Next Step */}
                   <div className="flex justify-center">
                     <Button
                       onClick={handleNextStep}
@@ -1416,6 +1515,341 @@ export default function SignUpForm() {
                   </div>
                 </>
               )}
+
+              {/* STEP 9 CONTENT */}
+              {step.id === 9 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    Tell us how you&apos;d like to receive your bills and
+                    updates.
+                  </p>
+
+                  {/* 1) Consent to Electronic Bills? */}
+                  <p className="mb-2 text-[16px]">
+                    Do you consent to receiving bills, notices, and other
+                    documents related to your energy supply electronically?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          consentElectronicBills: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.consentElectronicBills === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          consentElectronicBills: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.consentElectronicBills === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* 2) All Communication Same Method? */}
+                  <p className="mb-2 text-[16px]">
+                    Would you prefer all communication via the same method?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          allCommunicationSameMethod: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.allCommunicationSameMethod === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          allCommunicationSameMethod: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.allCommunicationSameMethod === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* 3) Use Primary Contact Email? (only if all comm. same method is Yes) */}
+                  {formData.allCommunicationSameMethod && (
+                    <>
+                      <p className="mb-2 text-[16px]">
+                        For account‑related notices, including your Welcome
+                        Pack, should we use your primary contact email address?
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Button
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              usePrimaryEmailForAll: true,
+                            }))
+                          }
+                          className={getToggleButtonClasses(
+                            formData.usePrimaryEmailForAll === true,
+                            false
+                          )}
+                        >
+                          Yes
+                        </Button>
+                        <Button
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              usePrimaryEmailForAll: false,
+                            }))
+                          }
+                          className={getToggleButtonClasses(
+                            formData.usePrimaryEmailForAll === false,
+                            false
+                          )}
+                        >
+                          No
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* 4) Postal Address Correct? */}
+                  <p className="mb-2 text-[16px]">
+                    Is your postal address correct?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isPostalAddressCorrect: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.isPostalAddressCorrect === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isPostalAddressCorrect: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.isPostalAddressCorrect === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* Next Step */}
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* STEP 10 CONTENT */}
+              {step.id === 10 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    A few final details about your billing and communication
+                    preferences..
+                  </p>
+
+                  {/* 1) Monthly Bills OK? */}
+                  <p className="mb-2 text-[16px]">
+                    We’ll send you bills monthly, based on meter reads provided
+                    by your meter data provider. Is that OK?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          monthlyBillsOk: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.monthlyBillsOk === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          monthlyBillsOk: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.monthlyBillsOk === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* 2) Promotional Contact Consent */}
+                  <p className="mb-2 text-[16px]">
+                    We may contact you from time to time via phone, email, SMS,
+                    or other means to promote products and offers, including gas
+                    and electricity offers from our associated partners. You can
+                    opt out at any time by letting us know. Do you agree?
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          promotionalContactConsent: true,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.promotionalContactConsent === true,
+                        false
+                      )}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          promotionalContactConsent: false,
+                        }))
+                      }
+                      className={getToggleButtonClasses(
+                        formData.promotionalContactConsent === false,
+                        false
+                      )}
+                    >
+                      No
+                    </Button>
+                  </div>
+
+                  {/* Next Step */}
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* STEP 11 CONTENT */}
+              {step.id === 11 && (
+                <>
+                  <p className="mb-4 text-[20px]">
+                    Please review the Electricity Market Offer Contract Summary
+                    and EIC Script before completing your sign-up.
+                  </p>
+
+                  {/* Button: Market Offer Contract Summary */}
+                  <div className="mb-4">
+                    <Button
+                      onClick={() => {
+                        // e.g., open a modal or PDF link
+                        // setFormData((prev) => ({ ...prev, hasReviewedMarketOfferSummary: true }));
+                        alert("Opening Market Offer Contract Summary...");
+                      }}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
+                    >
+                      Electricity Market Offer Contract Summary
+                    </Button>
+                    <p className="mt-2 text-sm text-gray-700">
+                      Sales agent provides a summary of the contract terms,
+                      including rates, fees, and conditions.
+                    </p>
+                  </div>
+
+                  {/* Button: EIC Script */}
+                  <div className="mb-6">
+                    <Button
+                      onClick={() => {
+                        // e.g., open a modal or PDF link
+                        // setFormData((prev) => ({ ...prev, hasReviewedEICScript: true }));
+                        alert("Opening EIC Script...");
+                      }}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
+                    >
+                      Explicit Informed Consent (EIC) Script
+                    </Button>
+                    <p className="mt-2 text-sm text-gray-700">
+                      Sales agent reads the EIC script, confirming the
+                      customer’s understanding and agreement to the contract
+                      terms..
+                    </p>
+                  </div>
+
+                  {/* Next Step (or final) */}
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleNextStep}
+                      className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {/* PLACEHOLDER for STEPS 6..11 (unchanged)
+              {![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(step.id) &&
+                !step.isFinal && (
+                  <>
+                    <p className="mb-6 text-[20px]">
+                      Content for <strong>{step.title}</strong> goes here.
+                    </p>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={handleNextStep}
+                        className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                      >
+                        Next Step
+                      </Button>
+                    </div>
+                  </>
+                )} */}
 
               {/* Final Step Placeholder */}
               {step.isFinal && (
