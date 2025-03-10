@@ -177,6 +177,7 @@ export default function SignUpForm() {
   const handleNextStep = () => {
     const nextStepId = currentStep + 1;
     const nextStep = steps.find((step) => step.id === nextStepId);
+
     if (nextStep) {
       setSteps((prevSteps) =>
         prevSteps.map((step) => ({
@@ -185,6 +186,15 @@ export default function SignUpForm() {
         }))
       );
       setCurrentStep(nextStepId);
+    } else {
+      // If there's no next step, move to final step (Step 0)
+      setSteps((prevSteps) =>
+        prevSteps.map((step) => ({
+          ...step,
+          isOpen: step.id === 0, // Ensure final step opens
+        }))
+      );
+      setCurrentStep(0); // Move to confirmation step
     }
   };
 
