@@ -1093,6 +1093,7 @@ import {
   ChevronRight,
   Calendar,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const LeadCaptureForm = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -1111,6 +1112,8 @@ const LeadCaptureForm = () => {
   const [suburb, setSuburb] = useState("Auto populate");
   const [postCode, setPostCode] = useState("Auto populate");
   const [stateName, setStateName] = useState("Auto populate");
+  const navigate = useNavigate();
+
 
   const monthNames = [
     "January",
@@ -1233,6 +1236,36 @@ const LeadCaptureForm = () => {
     setStateName(addr.state || "Auto populate");
 
     setAddressSuggestions([]);
+  };
+
+  // Save the current form data (this example uses localStorage)
+  const handleSave = () => {
+    const data = {
+      billingAddress,
+      streetAddress,
+      suburb,
+      postCode,
+      stateName,
+      selectedProducts,
+      moveInDate: selectedDate,
+    };
+    localStorage.setItem("leadData", JSON.stringify(data));
+    alert("Data saved!");
+  };
+
+  // Navigate to the signup form page and pass all the data along
+  const handleConnect = () => {
+    console.log("here")
+    const data = {
+      billingAddress,
+      streetAddress,
+      suburb,
+      postCode,
+      stateName,
+      selectedProducts,
+      moveInDate: selectedDate,
+    };
+    navigate("/signup-form", { state: data });
   };
 
   return (
@@ -1507,6 +1540,21 @@ const LeadCaptureForm = () => {
             )}
           </div>
         </div>
+      </div>
+      {/* Save and Connect Buttons (aligned to the right) */}
+      <div className="flex justify-end mt-4">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
+        >
+          Save
+        </button>
+        <button
+          onClick={handleConnect}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Connect
+        </button>
       </div>
     </div>
   );
