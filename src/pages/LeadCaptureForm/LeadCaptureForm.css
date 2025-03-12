@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 
 .lead-capture-form {
-    text-align: left;
-  }
-  
+  text-align: left;
+}
+
 /* Code 1 */
 /* .lead-capture-form {
   font-family: "Poppins", sans-serif;
@@ -656,13 +656,39 @@
 /***********************************
  * Billing Address & Map Reference
  ***********************************/
-.billing-address-input {
+/* .billing-address-input {
   position: relative;
   background-color: #fec600;
   border-radius: 5px;
   padding: 10px;
   margin-top: 5px;
-}
+} */
+/* Ensure the parent container is relatively positioned */
+/* .billing-address-input {
+  position: relative; 
+  background-color: #fec600;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 5px;
+  /* overflow: visible;
+} */
+
+/* Style the suggestions dropdown to align below the input */
+/* .address-suggestions {
+  position: absolute;
+  left: 0;
+  top: 100%; 
+  margin-top: 4px;
+  width: 100%; 
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  z-index: 999;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+} */
 
 .billing-address-input input {
   background: transparent;
@@ -862,4 +888,92 @@
 
 .agent-option:hover {
   background-color: #f0f0f0;
+}
+
+/* .address-suggestions {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  position: absolute;
+  width: 100%;       
+  max-height: 200px; 
+  overflow-y: auto;
+  z-index: 999;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+} */
+
+/* .suggestion-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+} */
+
+/* .billing-address-input {
+  position: relative;
+  background-color: #fec600;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 5px;
+}
+
+.address-suggestions {
+  position: absolute;
+  left: 0;
+  top: 100%; 
+  margin-top: 4px;
+  width: 100%; 
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  z-index: 999;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+} */
+.billing-address-input {
+  position: relative;
+  z-index: 9999;
+  background-color: #fec600;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 5px; /* This is for the entire container */
+}
+
+/* Suggestions dropdown directly attached to the input */
+.address-suggestions {
+  position: absolute;
+  top: 100%; /* Directly below the container */
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  z-index: 9999;
+  list-style: none;
+  margin: 0; /* Remove extra margin so it’s flush */
+  padding: 0;
+}
+
+.suggestion-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
+}
+.billing-address-input {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.address-suggestions {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
