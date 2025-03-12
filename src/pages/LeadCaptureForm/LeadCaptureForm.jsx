@@ -1094,7 +1094,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import Sidebar from "../../components/Sidebar"; // Import Sidebar
 const LeadCaptureForm = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -1113,7 +1113,6 @@ const LeadCaptureForm = () => {
   const [postCode, setPostCode] = useState("Auto populate");
   const [stateName, setStateName] = useState("Auto populate");
   const navigate = useNavigate();
-
 
   const monthNames = [
     "January",
@@ -1255,7 +1254,7 @@ const LeadCaptureForm = () => {
 
   // Navigate to the signup form page and pass all the data along
   const handleConnect = () => {
-    console.log("here")
+    console.log("here");
     const data = {
       billingAddress,
       streetAddress,
@@ -1269,42 +1268,54 @@ const LeadCaptureForm = () => {
   };
 
   return (
-    <div className="lead-capture-form">
-      <h1 className="form-title">Lead Capture Form</h1>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar
+        style={{ width: "25%" }}
+        className="w-1/4 h-screen fixed md:relative"
+      />
 
-      {/* Step 1: Customer Details */}
-      <div className="form-section">
-        <h2 className="section-title">
-          Step 1: <span className="section-subtitle">Customer Details</span>
-        </h2>
-        <div className="form-fields-grid">
-          <div className="form-field">
-            <label>First Name:</label>
-            <input type="text" placeholder="Enter your first name" />
-          </div>
-          <div className="form-field">
-            <label>Last Name:</label>
-            <input type="text" placeholder="Enter your last name" />
-          </div>
-          <div className="form-field">
-            <label>Contact Number:</label>
-            <input type="text" placeholder="Enter your contact number" />
-          </div>
-          <div className="form-field">
-            <label>Email Address:</label>
-            <input type="email" placeholder="Enter your email address" />
-          </div>
-        </div>
-      </div>
+      {/* Main Content */}
+      <main
+        className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen"
+        style={{ width: "75%" }}
+      >
+        <div className="lead-capture-form">
+          <h1 className="form-title">Lead Capture Form</h1>
 
-      {/* Step 2: Move-In Address */}
-      <div className="form-section">
-        <h2 className="section-title">
-          Step 2: <span className="section-subtitle">Move-In Address</span>
-        </h2>
-        <div className="form-fields-grid">
-          {/* Billing Address: Full-width */}
-          {/* <div className="form-field billing-address">
+          {/* Step 1: Customer Details */}
+          <div className="form-section">
+            <h2 className="section-title">
+              Step 1: <span className="section-subtitle">Customer Details</span>
+            </h2>
+            <div className="form-fields-grid">
+              <div className="form-field">
+                <label>First Name:</label>
+                <input type="text" placeholder="Enter your first name" />
+              </div>
+              <div className="form-field">
+                <label>Last Name:</label>
+                <input type="text" placeholder="Enter your last name" />
+              </div>
+              <div className="form-field">
+                <label>Contact Number:</label>
+                <input type="text" placeholder="Enter your contact number" />
+              </div>
+              <div className="form-field">
+                <label>Email Address:</label>
+                <input type="email" placeholder="Enter your email address" />
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2: Move-In Address */}
+          <div className="form-section">
+            <h2 className="section-title">
+              Step 2: <span className="section-subtitle">Move-In Address</span>
+            </h2>
+            <div className="form-fields-grid">
+              {/* Billing Address: Full-width */}
+              {/* <div className="form-field billing-address">
             <label>Billing Address:</label>
             <div className="billing-address-input">
               <input
@@ -1332,44 +1343,44 @@ const LeadCaptureForm = () => {
             )}
           </div> */}
 
-          <div className="form-field billing-address">
-            <label>Billing Address:</label>
+              <div className="form-field billing-address">
+                <label>Billing Address:</label>
 
-            {/* Parent container with relative positioning, background, padding, etc. */}
-            <div className="relative bg-yellow-400 rounded-md p-2 mt-1">
-              <input
-                type="text"
-                value={billingAddress}
-                onChange={handleBillingAddressChange}
-                className="bg-transparent border-none outline-none w-[calc(100%-30px)] font-medium"
-              />
+                {/* Parent container with relative positioning, background, padding, etc. */}
+                <div className="relative bg-yellow-400 rounded-md p-2 mt-1">
+                  <input
+                    type="text"
+                    value={billingAddress}
+                    onChange={handleBillingAddressChange}
+                    className="bg-transparent border-none outline-none w-[calc(100%-30px)] font-medium"
+                  />
 
-              {/* Check icon: absolutely positioned to the right */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                <Check size={20} color="#000" />
+                  {/* Check icon: absolutely positioned to the right */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Check size={20} color="#000" />
+                  </div>
+
+                  {/* Map reference text in smaller font, aligned to the right */}
+                  <div className="text-xs text-right mt-1">Map Reference</div>
+
+                  {/* Tailwind suggestions dropdown */}
+                  {addressSuggestions.length > 0 && (
+                    <ul className="absolute left-0 top-full mt-1 w-full max-h-48 overflow-y-auto border border-gray-300 bg-white z-50 list-none p-0">
+                      {addressSuggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="p-2 cursor-pointer hover:bg-gray-100 text-black"
+                        >
+                          {suggestion.display_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
 
-              {/* Map reference text in smaller font, aligned to the right */}
-              <div className="text-xs text-right mt-1">Map Reference</div>
-
-              {/* Tailwind suggestions dropdown */}
-              {addressSuggestions.length > 0 && (
-                <ul className="absolute left-0 top-full mt-1 w-full max-h-48 overflow-y-auto border border-gray-300 bg-white z-50 list-none p-0">
-                  {addressSuggestions.map((suggestion, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="p-2 cursor-pointer hover:bg-gray-100 text-black"
-                    >
-                      {suggestion.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          {/* <div className="form-field">
+              {/* <div className="form-field">
             <label>Street Address:</label>
             <input type="text" defaultValue="Auto populate" />
           </div>
@@ -1385,177 +1396,179 @@ const LeadCaptureForm = () => {
             <label>State:</label>
             <input type="text" defaultValue="Auto populate" />
           </div> */}
-          <div className="form-field">
-            <label>Street Address:</label>
-            <input
-              type="text"
-              value={streetAddress}
-              // readOnly if you want to lock it
-              readOnly
-            />
-          </div>
-          <div className="form-field">
-            <label>Suburb:</label>
-            <input type="text" value={suburb} readOnly />
-          </div>
-          <div className="form-field">
-            <label>Postcode:</label>
-            <input type="text" value={postCode} readOnly />
-          </div>
-          <div className="form-field">
-            <label>State:</label>
-            <input type="text" value={stateName} readOnly />
-          </div>
-        </div>
-
-        <div className="form-field product-section">
-          <label>What products do you need?</label>
-          <div className="product-buttons">
-            <button
-              className={`product-button ${
-                selectedProducts.electricity ? "selected" : "default-yellow"
-              }`}
-              onClick={() => toggleProduct("electricity")}
-            >
-              Electricity
-            </button>
-            <button
-              className={`product-button ${
-                selectedProducts.gas ? "selected" : "default-yellow"
-              }`}
-              onClick={() => toggleProduct("gas")}
-            >
-              Gas
-            </button>
-            <button className="product-button water not-activated">
-              Water
-            </button>
-            <button className="product-button broadband not-activated">
-              Broadband
-            </button>
-          </div>
-          <div className="note">(Color red, not activated in phase 1)</div>
-        </div>
-
-        <div className="form-field">
-          <label>When is your preferred move-in date?</label>
-          <div className="date-picker">
-            <div
-              className="date-picker-input"
-              onClick={() => setShowCalendar(!showCalendar)}
-            >
-              <span>
-                {selectedDate.toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-              <Calendar size={20} color="#fff" />
+              <div className="form-field">
+                <label>Street Address:</label>
+                <input
+                  type="text"
+                  value={streetAddress}
+                  // readOnly if you want to lock it
+                  readOnly
+                />
+              </div>
+              <div className="form-field">
+                <label>Suburb:</label>
+                <input type="text" value={suburb} readOnly />
+              </div>
+              <div className="form-field">
+                <label>Postcode:</label>
+                <input type="text" value={postCode} readOnly />
+              </div>
+              <div className="form-field">
+                <label>State:</label>
+                <input type="text" value={stateName} readOnly />
+              </div>
             </div>
 
-            {showCalendar && (
-              <div className="calendar">
-                <div className="calendar-header">
-                  <ChevronLeft
-                    size={16}
-                    color="#0047AB"
-                    className="calendar-nav"
-                    onClick={() => changeMonth(-1)}
-                  />
+            <div className="form-field product-section">
+              <label>What products do you need?</label>
+              <div className="product-buttons">
+                <button
+                  className={`product-button ${
+                    selectedProducts.electricity ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("electricity")}
+                >
+                  Electricity
+                </button>
+                <button
+                  className={`product-button ${
+                    selectedProducts.gas ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("gas")}
+                >
+                  Gas
+                </button>
+                <button className="product-button water not-activated">
+                  Water
+                </button>
+                <button className="product-button broadband not-activated">
+                  Broadband
+                </button>
+              </div>
+              <div className="note">(Color red, not activated in phase 1)</div>
+            </div>
+
+            <div className="form-field">
+              <label>When is your preferred move-in date?</label>
+              <div className="date-picker">
+                <div
+                  className="date-picker-input"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                >
                   <span>
-                    {monthNames[currentDate.getMonth()]}{" "}
-                    {currentDate.getFullYear()}
+                    {selectedDate.toLocaleDateString("en-US", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </span>
-                  <ChevronRight
-                    size={16}
-                    color="#0047AB"
-                    className="calendar-nav"
-                    onClick={() => changeMonth(1)}
-                  />
+                  <Calendar size={20} color="#fff" />
                 </div>
 
-                <div className="calendar-days">
-                  <div className="weekday">Su</div>
-                  <div className="weekday">Mo</div>
-                  <div className="weekday">Tu</div>
-                  <div className="weekday">We</div>
-                  <div className="weekday">Th</div>
-                  <div className="weekday">Fr</div>
-                  <div className="weekday">Sa</div>
-                  {renderCalendarDays()}
-                </div>
+                {showCalendar && (
+                  <div className="calendar">
+                    <div className="calendar-header">
+                      <ChevronLeft
+                        size={16}
+                        color="#0047AB"
+                        className="calendar-nav"
+                        onClick={() => changeMonth(-1)}
+                      />
+                      <span>
+                        {monthNames[currentDate.getMonth()]}{" "}
+                        {currentDate.getFullYear()}
+                      </span>
+                      <ChevronRight
+                        size={16}
+                        color="#0047AB"
+                        className="calendar-nav"
+                        onClick={() => changeMonth(1)}
+                      />
+                    </div>
+
+                    <div className="calendar-days">
+                      <div className="weekday">Su</div>
+                      <div className="weekday">Mo</div>
+                      <div className="weekday">Tu</div>
+                      <div className="weekday">We</div>
+                      <div className="weekday">Th</div>
+                      <div className="weekday">Fr</div>
+                      <div className="weekday">Sa</div>
+                      {renderCalendarDays()}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Step 3: Real Estate Agent (REA) Details */}
-      <div className="form-section">
-        <h2 className="section-title">
-          Step 3:{" "}
-          <span className="section-subtitle">
-            Real Estate Agent (REA) Details
-          </span>
-        </h2>
-        <div className="form-fields-grid">
-          <div className="form-field">
-            <label>REA Office Details:</label>
-            <input type="text" placeholder="Test" />
-          </div>
-          <div className="form-field">
-            <label>Referred Agent Name:</label>
-            <input type="text" placeholder="Test" />
-          </div>
-          <div className="form-field">
-            <label>
-              REA Software Used (if known): (Optional: Name of software used by
-              the REA)
-            </label>
-            <input type="text" placeholder="Test" />
-          </div>
-        </div>
-      </div>
-
-      {/* Step 4: Lead Management */}
-      <div className="form-section">
-        <h2 className="section-title">
-          Step 4: <span className="section-subtitle">Lead Management</span>
-        </h2>
-        <div className="form-field">
-          <label>Internal Use</label>
-          <div className="assign-lead-dropdown">
-            <div
-              className="assign-lead-button"
-              onClick={() => setShowAgentDropdown(!showAgentDropdown)}
-            >
-              Assign Lead
-              <ChevronDown size={20} color="white" />
             </div>
-            {showAgentDropdown && (
-              <div className="agent-dropdown">
-                <div className="agent-option">( Select Agent )</div>
+          </div>
+
+          {/* Step 3: Real Estate Agent (REA) Details */}
+          <div className="form-section">
+            <h2 className="section-title">
+              Step 3:{" "}
+              <span className="section-subtitle">
+                Real Estate Agent (REA) Details
+              </span>
+            </h2>
+            <div className="form-fields-grid">
+              <div className="form-field">
+                <label>REA Office Details:</label>
+                <input type="text" placeholder="Test" />
               </div>
-            )}
+              <div className="form-field">
+                <label>Referred Agent Name:</label>
+                <input type="text" placeholder="Test" />
+              </div>
+              <div className="form-field">
+                <label>
+                  REA Software Used (if known): (Optional: Name of software used
+                  by the REA)
+                </label>
+                <input type="text" placeholder="Test" />
+              </div>
+            </div>
+          </div>
+
+          {/* Step 4: Lead Management */}
+          <div className="form-section">
+            <h2 className="section-title">
+              Step 4: <span className="section-subtitle">Lead Management</span>
+            </h2>
+            <div className="form-field">
+              <label>Internal Use</label>
+              <div className="assign-lead-dropdown">
+                <div
+                  className="assign-lead-button"
+                  onClick={() => setShowAgentDropdown(!showAgentDropdown)}
+                >
+                  Assign Lead
+                  <ChevronDown size={20} color="white" />
+                </div>
+                {showAgentDropdown && (
+                  <div className="agent-dropdown">
+                    <div className="agent-option">( Select Agent )</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Save and Connect Buttons (aligned to the right) */}
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
+            >
+              Save
+            </button>
+            <button
+              onClick={handleConnect}
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              Connect
+            </button>
           </div>
         </div>
-      </div>
-      {/* Save and Connect Buttons (aligned to the right) */}
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
-        >
-          Save
-        </button>
-        <button
-          onClick={handleConnect}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Connect
-        </button>
-      </div>
+      </main>
     </div>
   );
 };
