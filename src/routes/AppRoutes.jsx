@@ -5,7 +5,7 @@ import Signup from "../pages/Signup";
 import Dashboard from "../pages/Dashboard";
 import AuthContext from "../context/AuthContext";
 import ProtectedRoute from "../components/ProtectedRoute";
-import LeadCaptureForm from "../pages/LeadCaptureForm"
+import LeadCaptureForm from "../pages/LeadCaptureForm/LeadCaptureForm"
 import SignUpForm from "../pages/SignUpForm"
 
 
