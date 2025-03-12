@@ -1,25 +1,53 @@
 import { useState, useContext, useEffect } from "react";
 import { FaUsers, FaCheckCircle, FaTimesCircle, FaSignOutAlt } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 import AuthContext from "../context/AuthContext";
-import config from "../config";
+import Sidebar from "../components/Sidebar"; // Import Sidebar
 import api from "../api";
+import {  FaUserCheck, FaDesktop } from "react-icons/fa";
+import { FiArrowUp, FiArrowDown } from "react-icons/fi";
+import DataTable from "react-data-table-component";
+import '../styles/Dashboard.css'
 
-
-const leadsData = [
-  { id: 1, name: "Jane Cooper", date: "25-02-25", phone: "(+61) 0415 134 134", email: "jane@microsoft.com", address: "76 Nelson Drive", product: "Dual Fuel", status: "New" },
-  { id: 2, name: "Floyd Miles", date: "26-03-25", phone: "(+61) 0467 111 129", email: "floyd@yahoo.com", address: "76 Nelson Drive", product: "Electricity", status: "Call Attempt" },
-  { id: 3, name: "Ronald Richards", date: "27-04-25", phone: "(+61) 0497 976 976", email: "ronald@adobe.com", address: "76 Nelson Drive", product: "Gas", status: "Inactive" },
-];
 
 const statuses = ["New", "First Call Attempt", "Call Attempt", "Invalid Lead", "No Sale", "Organised", "Follow Up", "(EC) Script", "Sale"];
 
+
+
 const Dashboard = () => {
-  const [leads, setLeads] = useState(leadsData);
+  const [leads, setLeads] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState({});
   const { logout } = useContext(AuthContext);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
+  const columns = [
+    { name: "Lead Name", selector: (row) => row.customer_name, sortable: true, width: "10%" },
+    { name: "Move-in Date", selector: (row) => formatDate(row.submitted), sortable: true, width: "10%" },
+    { name: "Phone Number", selector: (row) => row.phone, width: "10%" },
+    { name: "Email", selector: (row) => row.tenant.email, width: "10%" },
+    { name: "Move-in Address", selector: (row) => row.address.text, width: "15%" },
+    { name: "Product", selector: (row) => getProducts(row.services), width: "10%" },
+    {
+      name: "Status",
+      cell: (row) => (
+        <select
+          className="border p-2 rounded-md bg-gray-100"
+          value={selectedStatus[row.id] || row.status}
+          onChange={(e) => handleStatusChange(row.id, e.target.value)}
+        >
+          {statuses.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      ),
+      width: "10%"
+    },
+  ];
+
 
   // Fetch leads from API
   useEffect(() => {
@@ -27,7 +55,8 @@ const Dashboard = () => {
       try {
         const payload = { submitted: "", page: currentPage };
         const { data } = await api.get('/crm/flk/leads-db/', { params: payload });
-        // setLeads(data.results);
+        // console.log(data.leads)
+        setLeads(data.leads);
         setTotalPages(data.totalPages);
         // setCurrentPage(currentPage + 1)
       } catch (error) {
@@ -36,6 +65,20 @@ const Dashboard = () => {
     };
     fetchLeads();
   }, [currentPage]);
+
+  const formatDate = (dateString) => {
+    console.log(dateString)
+    let d = new Date(dateString)
+    console.log(d)
+    const formattedDate = new Date(dateString).toISOString().split("T")[0];
+    return formattedDate
+  }
+
+  const getProducts = (services) => {
+    return Object.keys(services)
+    .filter(key => services[key]) // Filter only keys with true values
+    .join(", "); // Join them with a comma
+  }
 
   const handleStatusChange = (id, newStatus) => {
     setLeads(leads.map(lead => (lead.id === id ? { ...lead, status: newStatus } : lead)));
@@ -49,39 +92,11 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white shadow-md p-5">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-blue-600 flex items-center">⚡ SUPER MOVER</h2>
-          
-        </div>
-        <nav>
-          <ul>
-            <li className="mb-4">
-              <a href="#" className="flex items-center p-3 rounded-md bg-blue-600 text-white font-semibold">
-                📊 Lead Dashboard
-              </a>
-            </li>
-            <li className="mb-4">
-              <a href="#" className="flex items-center p-3 text-gray-700 hover:bg-gray-200 rounded-md">
-                📌 Lead Status Management
-              </a>
-            </li>
-            <li className="mb-4">
-              <a href="#" className="flex items-center p-3 text-gray-700 hover:bg-gray-200 rounded-md">
-                📈 Sales & Reporting Dashboard
-              </a>
-            </li>
-            <li>
-              <a href="#" className="flex items-center p-3 text-gray-700 hover:bg-gray-200 rounded-md">
-                ⚙️ User Access Settings
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <Sidebar style={{width: "25%"}} className="w-1/4 h-screen fixed md:relative" /> 
+ 
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen" style={{width: "75%"}}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
           <h1 className="text-2xl font-semibold mb-2 md:mb-0">Hello Orson 👋,</h1>
           <div className="relative w-full md:w-64 ml-auto">
@@ -94,43 +109,88 @@ const Dashboard = () => {
         </header>
 
         {/* Stats Section */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
-          <div className="p-5 bg-white rounded-md shadow flex items-center">
-            <FaUsers className="text-green-500 text-3xl mr-4" />
-            <div>
-              <p className="text-lg font-semibold">New Leads</p>
-              <p className="text-2xl font-bold">5,423</p>
-              <p className="text-green-500">↑ 16% this month</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
+          {/* New Leads Card */}
+          <div className="flex bg-white p-6 rounded-lg shadow-md border items-center">
+            <div className="p-4 rounded-full bg-green-100 flex items-center justify-center ml-4">
+              <FaUsers className="text-blue-700 text-3xl" />
+            </div>
+            <div className="ml-16">
+              <p className="text-gray-500 text-sm">New Leads</p>
+              <p className="text-3xl font-bold">5,423</p>
+              <p className="text-green-500 flex items-center mt-1 text-sm">
+                <FiArrowUp className="mr-1" />
+                16% this month
+              </p>
             </div>
           </div>
 
-          <div className="p-5 bg-white rounded-md shadow flex items-center">
-            <FaCheckCircle className="text-blue-500 text-3xl mr-4" />
-            <div>
-              <p className="text-lg font-semibold">In-Progress Leads</p>
-              <p className="text-2xl font-bold">1,893</p>
-              <p className="text-red-500">↓ 1% this month</p>
+
+          {/* In-Progress Leads Card */}
+          <div className="flex bg-white p-6 rounded-lg shadow-md border items-center">
+            <div className="p-4 rounded-full bg-green-100 flex items-center justify-center ml-4">
+              <FaUserCheck className="text-blue-700 text-3xl" />
+            </div>
+            <div className="ml-16">
+              <p className="text-gray-500 text-sm">In-Progress Leads</p>
+              <p className="text-3xl font-bold">1,893</p>
+              <p className="text-red-500 flex items-center mt-1 text-sm">
+                <FiArrowDown className="mr-1" />
+                1% this month
+              </p>
             </div>
           </div>
 
-          <div className="p-5 bg-white rounded-md shadow flex items-center">
-            <FaTimesCircle className="text-gray-500 text-3xl mr-4" />
-            <div>
-              <p className="text-lg font-semibold">Closed Leads</p>
-              <p className="text-2xl font-bold">189</p>
+          {/* Closed Leads Card */}
+          <div className="flex bg-white p-6 rounded-lg shadow-md border items-center">
+            <div className="p-4 rounded-full bg-green-100 flex items-center justify-center ml-4">
+              <FaDesktop className="text-blue-700 text-3xl" />
+            </div>
+            <div className="ml-16">
+              <p className="text-gray-500 text-sm">Closed Leads</p>
+              <p className="text-3xl font-bold">189</p>
+              {/* User Avatars */}
+              <div className="flex mt-1">
+                <img
+                  src="https://randomuser.me/api/portraits/men/32.jpg"
+                  alt="User 1"
+                  className="w-8 h-8 rounded-full border-2 border-white -ml-2"
+                />
+                <img
+                  src="https://randomuser.me/api/portraits/women/45.jpg"
+                  alt="User 2"
+                  className="w-8 h-8 rounded-full border-2 border-white -ml-2"
+                />
+                <img
+                  src="https://randomuser.me/api/portraits/men/50.jpg"
+                  alt="User 3"
+                  className="w-8 h-8 rounded-full border-2 border-white -ml-2"
+                />
+                <img
+                  src="https://randomuser.me/api/portraits/women/38.jpg"
+                  alt="User 4"
+                  className="w-8 h-8 rounded-full border-2 border-white -ml-2"
+                />
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Leads Table */}
         <section className="bg-white p-5 rounded-md shadow">
           <div className="flex flex-col md:flex-row justify-between mb-4">
-            <h2 className="text-lg font-semibold mb-2 md:mb-0">All Leads</h2>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md">Create New Lead</button>
+            <div>
+              <h2 className="text-xl font-semibold mb-1">All Leads</h2>
+              <p className="text-blue-600 text-sm ml-5">Active Members</p>
+            </div>
+    
+            <button onClick={() => navigate("/lead-capture-form")} 
+              className="bg-blue-600 text-white px-4 py-2 rounded-md">Create New Lead</button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200">
+            {/* <table className="w-full border-collapse border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="p-3 border">Lead Name</th>
@@ -145,12 +205,13 @@ const Dashboard = () => {
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead.id} className="text-center">
-                    <td className="p-3 border">{lead.name}</td>
-                    <td className="p-3 border">{lead.date}</td>
+                    {console.log(lead)}
+                    <td className="p-3 border">{lead.customer_name}</td>
+                    <td className="p-3 border">{formatDate(lead.submitted)}</td>
                     <td className="p-3 border">{lead.phone}</td>
-                    <td className="p-3 border">{lead.email}</td>
-                    <td className="p-3 border">{lead.address}</td>
-                    <td className="p-3 border">{lead.product}</td>
+                    <td className="p-3 border">{lead.tenant.email}</td>
+                    <td className="p-3 border">{lead.address.text}</td>
+                    <td className="p-3 border">{getProducts(lead.services)}</td>
                     <td className="p-3 border relative">
                       <select
                         className="border p-2 rounded-md bg-gray-100"
@@ -167,7 +228,19 @@ const Dashboard = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table> */}
+            <DataTable
+                title=""
+                columns={columns}
+                data={leads}
+                pagination
+                paginationServer
+                paginationTotalRows={totalPages * 10} // Assuming 10 leads per page
+                paginationPerPage={10}
+                paginationComponentOptions={{ noRowsPerPage: true }}
+                onChangePage={(page) => setCurrentPage(page)}
+                highlightOnHover
+              />
           </div>
         </section>
       </main>

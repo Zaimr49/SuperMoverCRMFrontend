@@ -5,6 +5,7 @@ import AuthContext from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import config from "../config"; // Import base URL
 import api from "../api";
+import loginSuperMoverLogo from "../assets/loginSuperMoverLogo.png";
 
 
 const Auth = () => {
@@ -33,7 +34,7 @@ const Auth = () => {
       {/* Left Section */}
       <div className="w-1/2 bg-black text-white flex flex-col justify-center items-center p-10">
         <h1 className="text-4xl flex items-left absolute top-10 left-10">
-          <span className="text-yellow-400 mr-2 font-sans">⚡</span> SUPER MOVER
+          <img src={loginSuperMoverLogo} alt="Super Mover Logo" className="h-32 w-auto" />
         </h1>
         <div className="flex flex-col justify-center items-center flex-grow">
           <p className="text-4xl mt-4 text-left font-sans">Powering Your Move,</p>
