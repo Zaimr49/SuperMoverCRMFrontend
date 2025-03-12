@@ -1,17 +1,30 @@
-<<<<<<< HEAD
-# SuperMoverCRMFrontend
-SuperMoverCRMFrontend
-=======
-# React + Vite
+# Super Mover - Customer Relationship Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Super Mover is a Customer Relationship Management (CRM) system designed for efficient management of customer information and interactions. This project provides a login and signup form for users to access the system securely.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Prerequisites
+Make sure you have the following installed:
+- Node.js (>=12.0.0)
+- npm or yarn
 
-## Expanding the ESLint configuration
+### Steps to Set Up the Project
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> 03d53ae (Initial commit)
+1. **Clone the repository**:
+
+```bash
+git clone https://github.com/your-username/super-mover.git
+
+
+
+cd super-mover
+
+npm install
+# or if you're using yarn
+yarn install
+
+npm run dev
+# or if you're using yarn
+yarn start
+

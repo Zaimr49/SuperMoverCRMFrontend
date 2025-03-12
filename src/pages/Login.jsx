@@ -3,6 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import config from "../config"; // Import base URL
+import api from "../api";
+
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -14,26 +17,14 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLogin) {
-      // Login logic
-      console.log({ email, password })
-      // try {
-      //   const { data } = await axios.post("http://localhost:5000/api/login", { email, password });
-      //   login(data.token);
-      //   navigate("/dashboard");
-      // } catch (error) {
-      //   alert("Invalid credentials");
-      // }
-    } else {
-      // Signup logic
-      console.log({ email, password, name })
-      // try {
-      //   const { data } = await axios.post("http://localhost:5000/api/signup", { email, password, name });
-      //   login(data.token);
-      //   navigate("/dashboard");
-      // } catch (error) {
-      //   alert("Failed to register");
-      // }
+    try {
+      const url = isLogin ? "/core/login/" : "/core/signup/";
+      const payload = isLogin ? { email, password } : { email, password, name };
+      const { data } = await api.post(url, payload);
+      login(data.access, data.refresh);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login/Signup failed:", error.response?.data || error.message);
     }
   };
 
@@ -45,7 +36,8 @@ const Auth = () => {
           <span className="text-yellow-400 mr-2 font-sans">⚡</span> SUPER MOVER
         </h1>
         <div className="flex flex-col justify-center items-center flex-grow">
-          <p className="text-4xl mt-4 text-left font-sans">Customer Relationship Management System</p>
+          <p className="text-4xl mt-4 text-left font-sans">Powering Your Move,</p>
+          <p className="text-4xl mt-4 text-left font-sans">Simplifying Your Connections</p>
         </div>
         <footer className="absolute bottom-4 text-gray-500 text-sm font-sans">
           © 2025 Okta, Inc. All Rights Reserved.
