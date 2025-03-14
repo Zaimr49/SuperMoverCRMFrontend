@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import { FaChartLine, FaUserCog } from "react-icons/fa";
 import { FiTrendingUp, FiUsers, FiLogIn } from "react-icons/fi";
 import superMoverLogo from "../assets/loginSuperMoverLogo.png";
@@ -11,34 +12,79 @@ const Sidebar = () => {
       <nav>
         <ul className="space-y-2">
           <li>
-            <a href="/dashboard" className="flex items-center p-3 text-sm rounded-lg bg-blue-600 text-white font-semibold">
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `flex items-center p-3 text-sm rounded-lg ${
+                  isActive
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
               <FaChartLine className="mr-3" />
               Lead Dashboard
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a href="#" className="flex items-center p-3 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <NavLink
+              to="/#"
+              className={({ isActive }) =>
+                `flex items-center p-3 text-sm rounded-lg ${
+                  isActive
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
               <FiTrendingUp className="mr-3" />
               Lead Status Management
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a href="#" className="flex items-center p-3 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <NavLink
+              to="/#"
+              className={({ isActive }) =>
+                `flex items-center p-3 text-sm rounded-lg ${
+                  isActive
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
               <FiLogIn className="mr-3" />
               Sale Sign Up
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a href="#" className="flex items-center p-3 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <NavLink
+              to="/sales-dashboard"
+              className={({ isActive }) =>
+                `flex items-center p-3 text-sm rounded-lg ${
+                  isActive
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
               <FiUsers className="mr-3" />
               Sales & Reporting
-            </a>
+            </NavLink>
           </li>
           <li>
-            <a href="#" className="flex items-center p-3 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <NavLink
+              to="/#"
+              className={({ isActive }) =>
+                `flex items-center p-3 text-sm rounded-lg ${
+                  isActive
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
               <FaUserCog className="mr-3" />
               User Access Settings
-            </a>
+            </NavLink>
           </li>
         </ul>
       </nav>

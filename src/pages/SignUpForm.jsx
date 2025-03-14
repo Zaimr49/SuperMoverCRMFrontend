@@ -2,6 +2,7 @@ import React, { useState, useRef, createRef } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import classNames from "classnames";
 import Sidebar from "../components/Sidebar"; // Import Sidebar
+import { useNavigate } from "react-router-dom";
 
 /** Utility to combine Tailwind classes. */
 function cn(...classes) {
@@ -48,7 +49,7 @@ export default function SignUpForm() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const stepRefs = useRef({}); // We'll fill in refs for each step
-
+  const navigate = useNavigate();
   const monthNames = [
     "January",
     "February",
@@ -296,6 +297,15 @@ export default function SignUpForm() {
         className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen"
         style={{ width: "75%" }}
       >
+        {/* Back Button at Top Right */}
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={() => navigate("/lead-capture-form")}
+            className="bg-[#ccc] hover:bg-[#bbb] text-white focus:outline-none focus:ring-0"
+          >
+            Back
+          </Button>
+        </div>
         {/* // <div className="max-w-6xl mx-auto px-2 py-6 bg-white text-left text-gray-800"> */}
         <div className="px-2 py-6 bg-white text-left text-gray-800">
           {steps.map((step) => {
@@ -1098,7 +1108,7 @@ export default function SignUpForm() {
                           <div className="relative">
                             {/* 'Date picker input' */}
                             <div
-                              className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer"
+                              className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer w-72"
                               onClick={() => setShowCalendar(!showCalendar)}
                             >
                               <span>
@@ -1117,7 +1127,7 @@ export default function SignUpForm() {
                             </div>
 
                             {showCalendar && (
-                              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-lg">
+                              <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 shadow-lg">
                                 {/* Calendar header */}
                                 <div className="flex items-center justify-between p-2 border-b border-gray-100 bg-gray-50">
                                   <ChevronLeft
