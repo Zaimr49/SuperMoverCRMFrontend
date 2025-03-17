@@ -8,6 +8,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import LeadCaptureForm from "../pages/LeadCaptureForm/LeadCaptureForm"
 import SignUpForm from "../pages/SignUpForm"
 import SalesReportingDashboard from "../pages/SalesReportingDashboard";
+import UserAcessSettings from "../pages/UserAccessSettings";
 
 const AppRoutes = () => {
 
@@ -21,6 +22,7 @@ const AppRoutes = () => {
         <Route path="/signup" element={isAuthenticated() ? <Navigate to="/dashboard" /> : <Signup />} />
         <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
         <Route path="/sales-dashboard" element={<ProtectedRoute element={<SalesReportingDashboard />} />} />
+        <Route path="/user-access-settings" element={<ProtectedRoute element={<UserAcessSettings />} />} />
         
         <Route path="/lead-capture-form" element={<ProtectedRoute element={<LeadCaptureForm />} />} />
         <Route path="/signup-form" element={<ProtectedRoute element={<SignUpForm />} />} />

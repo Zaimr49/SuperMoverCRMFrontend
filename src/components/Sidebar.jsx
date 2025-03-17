@@ -73,7 +73,7 @@ const Sidebar = () => {
           </li>
           <li>
             <NavLink
-              to="/#"
+              to="/user-access-settings"
               className={({ isActive }) =>
                 `flex items-center p-3 text-sm rounded-lg ${
                   isActive
