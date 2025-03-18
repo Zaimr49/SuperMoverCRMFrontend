@@ -186,7 +186,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "leads" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-2 z-10 text-sm w-48">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl text-left rounded-md p-2 z-10 text-sm w-48">
                   <p>Total Lead Volume by Time Period</p>
                 </div>
               )}
@@ -201,7 +201,10 @@ export default function ManagementDashboard() {
                 <div className="text-center">
                   <p className="text-gray-500 text-sm">In-Progress Leads</p>
                   <p className="text-3xl font-bold">
-                    {inProgressLeadsData.reduce((acc, item) => acc + item.value, 0)}
+                    {inProgressLeadsData.reduce(
+                      (acc, item) => acc + item.value,
+                      0
+                    )}
                   </p>
                   <p className="text-red-500 flex items-center text-sm">
                     <FiArrowDown className="mr-1" />
@@ -216,7 +219,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "sales" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-2 z-10 text-sm w-48">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl text-left rounded-md p-2 z-10 text-sm w-48">
                   <p>Track Sales Conversion Rates</p>
                 </div>
               )}
@@ -242,7 +245,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "lead" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-2 z-10 text-sm w-48">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl text-left rounded-md p-2 z-10 text-sm w-48">
                   <p>REA Office</p>
                   <p>REA Software</p>
                 </div>
@@ -271,7 +274,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "retailers" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-2 z-10 text-sm w-48">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl text-left rounded-md p-2 z-10 text-sm w-48">
                   <p>Origin Energy</p>
                   <p>AGL</p>
                   <p>Energy Australia</p>
@@ -374,8 +377,12 @@ export default function ManagementDashboard() {
                   <FaUsers className="text-blue-700 text-3xl" />
                 </div>
                 <div className="ml-3 text-left">
-                  <p className="text-gray-700 font-semibold">Commission Tracking</p>
-                  <p className="text-gray-500 text-sm">Update Commission Status</p>
+                  <p className="text-gray-700 font-semibold">
+                    Commission Tracking
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Update Commission Status
+                  </p>
                 </div>
                 <button
                   onClick={() => toggleDropdown("commission")}
@@ -385,7 +392,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "commission" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-3 z-10 text-sm w-60">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl rounded-md p-3 z-10 text-sm w-60 text-left">
                   <ul className="list-disc list-inside ml-4 text-gray-700">
                     <li>Pending (Not Yet Paid)</li>
                     <li>Confirmed (Payables / Sales)</li>
@@ -401,7 +408,9 @@ export default function ManagementDashboard() {
                   <FaDesktop className="text-blue-600 text-3xl" />
                 </div>
                 <div className="ml-3 text-left">
-                  <p className="text-gray-700 font-semibold">Financial Reconciliation Reports</p>
+                  <p className="text-gray-700 font-semibold">
+                    Financial Reconciliation Reports
+                  </p>
                   <p className="text-gray-500 text-sm">Generate Reports</p>
                 </div>
                 <button
@@ -412,7 +421,7 @@ export default function ManagementDashboard() {
                 </button>
               </div>
               {activeDropdown === "financial" && (
-                <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-3 z-10 text-sm w-60">
+                <div className="absolute top-6 right-2 bg-white border-2 border-gray-300 shadow-xl rounded-md p-3 z-10 text-sm w-60 text-left">
                   <ul className="list-disc list-inside ml-4 text-gray-700">
                     <li>Leads Received</li>
                     <li>Sales Processed</li>
