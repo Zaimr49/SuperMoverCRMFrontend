@@ -11,13 +11,12 @@ import AuthContext from "../context/AuthContext";
 
 // Recharts imports
 import { BarChart, Bar, Tooltip, ResponsiveContainer } from "recharts";
-// import axios from "axios"; // If you use axios for data fetching
 
 export default function ManagementDashboard() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const { logout } = useContext(AuthContext);
 
-  // State for top cards (if needed from API) and chart data
+  // State for the chart data (initially empty)
   const [newLeadsData, setNewLeadsData] = useState([]);
   const [inProgressLeadsData, setInProgressLeadsData] = useState([]);
   const [leadSourceData, setLeadSourceData] = useState([]);
@@ -31,41 +30,87 @@ export default function ManagementDashboard() {
     logout();
   };
 
-  // Fetch data from API or use mock data
+  // Fetch dashboard data from Django backend endpoints
   useEffect(() => {
-    // Example with mock data; replace with your actual API call
-    // e.g.:
-    // const fetchData = async () => {
-    //   try {
-    //     const response = await axios.get("/api/dashboardData");
-    //     setNewLeadsData(response.data.newLeads);
-    //     setInProgressLeadsData(response.data.inProgressLeads);
-    //     setLeadSourceData(response.data.leadSource);
-    //     setRetailersData(response.data.retailers);
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // };
-    // fetchData();
+    async function fetchDashboardData() {
+      // New Leads
+      try {
+        const newLeadsRes = await fetch(
+          "http://127.0.0.1:8000/api/sales-dashboard/new-leads/"
+        );
+        if (newLeadsRes.ok) {
+          const data = await newLeadsRes.json();
+          setNewLeadsData(data);
+        } else {
+          throw new Error("Error fetching new leads");
+        }
+      } catch (error) {
+        console.error("Error fetching new leads:", error);
+        setNewLeadsData([
+          { name: "Last month", value: 60 },
+          { name: "Current month", value: 80 },
+        ]);
+      }
 
-    // Mock data for demonstration:
-    setNewLeadsData([
-      { name: "Last month", value: 60 },
-      { name: "Current month", value: 80 },
-    ]);
-    setInProgressLeadsData([
-      { name: "Last month", value: 70 },
-      { name: "Current month", value: 50 },
-    ]);
-    setLeadSourceData([
-      { name: "REA office", value: 50 },
-      { name: "REA software", value: 70 },
-    ]);
-    setRetailersData([
-      { name: "Electricity", value: 40 },
-      { name: "Gas", value: 70 },
-      { name: "Dual Fuel", value: 50 },
-    ]);
+      // In-Progress Leads
+      try {
+        const inProgressRes = await fetch(
+          "http://127.0.0.1:8000/api/sales-dashboard/in-progress-leads/"
+        );
+        if (inProgressRes.ok) {
+          const data = await inProgressRes.json();
+          setInProgressLeadsData(data);
+        } else {
+          throw new Error("Error fetching in-progress leads");
+        }
+      } catch (error) {
+        console.error("Error fetching in-progress leads:", error);
+        setInProgressLeadsData([
+          { name: "Last month", value: 70 },
+          { name: "Current month", value: 50 },
+        ]);
+      }
+
+      // Lead Source Data
+      try {
+        const leadSourceRes = await fetch(
+          "http://127.0.0.1:8000/api/sales-dashboard/lead-source/"
+        );
+        if (leadSourceRes.ok) {
+          const data = await leadSourceRes.json();
+          setLeadSourceData(data);
+        } else {
+          throw new Error("Error fetching lead source data");
+        }
+      } catch (error) {
+        console.error("Error fetching lead source:", error);
+        setLeadSourceData([
+          { name: "REA office", value: 50 },
+          { name: "REA software", value: 70 },
+        ]);
+      }
+
+      // Retailers Data
+      try {
+        const retailersRes = await fetch(
+          "http://127.0.0.1:8000/api/sales-dashboard/retailers/"
+        );
+        if (retailersRes.ok) {
+          const data = await retailersRes.json();
+          setRetailersData(data);
+        } else {
+          throw new Error("Error fetching retailers data");
+        }
+      } catch (error) {
+        console.error("Error fetching retailers:", error);
+        setRetailersData([
+          { name: "Electricity", value: 40 },
+          { name: "Gas", value: 70 },
+          { name: "Dual Fuel", value: 50 },
+        ]);
+      }
+    }
+    fetchDashboardData();
   }, []);
 
   return (
@@ -112,6 +157,7 @@ export default function ManagementDashboard() {
             </button>
           </div>
         </header>
+
         <div className="bg-white p-6 pb-16 rounded-lg shadow-md">
           {/* =================== TOP CARDS SECTION =================== */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 my-6">
@@ -123,7 +169,10 @@ export default function ManagementDashboard() {
                 </div>
                 <div className="text-center">
                   <p className="text-gray-500 text-sm">New Leads</p>
-                  <p className="text-3xl font-bold">5,423</p>
+                  {/* Here you might want to compute the total if needed */}
+                  <p className="text-3xl font-bold">
+                    {newLeadsData.reduce((acc, item) => acc + item.value, 0)}
+                  </p>
                   <p className="text-green-500 flex items-center text-sm">
                     <FiArrowUp className="mr-1" />
                     16% this month
@@ -133,7 +182,7 @@ export default function ManagementDashboard() {
                   onClick={() => toggleDropdown("leads")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
               {activeDropdown === "leads" && (
@@ -151,7 +200,9 @@ export default function ManagementDashboard() {
                 </div>
                 <div className="text-center">
                   <p className="text-gray-500 text-sm">In-Progress Leads</p>
-                  <p className="text-3xl font-bold">1,893</p>
+                  <p className="text-3xl font-bold">
+                    {inProgressLeadsData.reduce((acc, item) => acc + item.value, 0)}
+                  </p>
                   <p className="text-red-500 flex items-center text-sm">
                     <FiArrowDown className="mr-1" />
                     1% this month
@@ -161,7 +212,7 @@ export default function ManagementDashboard() {
                   onClick={() => toggleDropdown("sales")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
               {activeDropdown === "sales" && (
@@ -179,13 +230,15 @@ export default function ManagementDashboard() {
                 </div>
                 <div className="text-center">
                   <p className="text-gray-500 text-sm">Sales by Lead Source</p>
-                  <p className="text-3xl font-bold">1,893</p>
+                  <p className="text-3xl font-bold">
+                    {leadSourceData.reduce((acc, item) => acc + item.value, 0)}
+                  </p>
                 </div>
                 <button
                   onClick={() => toggleDropdown("lead")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
               {activeDropdown === "lead" && (
@@ -206,13 +259,15 @@ export default function ManagementDashboard() {
                   <p className="text-gray-500 text-sm">
                     Sales Product by Retailers
                   </p>
-                  <p className="text-3xl font-bold">1,893</p>
+                  <p className="text-3xl font-bold">
+                    {retailersData.reduce((acc, item) => acc + item.value, 0)}
+                  </p>
                 </div>
                 <button
                   onClick={() => toggleDropdown("retailers")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
               {activeDropdown === "retailers" && (
@@ -229,9 +284,9 @@ export default function ManagementDashboard() {
           </div>
           {/* =================== END TOP CARDS SECTION =================== */}
 
-          {/* ========== BAR CHARTS SECTION (SEPARATE) ========== */}
+          {/* ========== BAR CHARTS SECTION ========== */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* 1) New Leads Chart */}
+            {/* New Leads Chart */}
             <div className="bg-white p-6 rounded-lg">
               <div style={{ width: "100%", height: 150 }}>
                 <ResponsiveContainer>
@@ -239,20 +294,18 @@ export default function ManagementDashboard() {
                     data={newLeadsData}
                     margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                   >
-                    {/* No axes, just a tooltip */}
                     <Tooltip />
                     <Bar dataKey="value" fill="#3b82f6" radius={[5, 5, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              {/* Custom labels beneath the bars */}
               <div className="flex justify-around mt-2 text-xs text-gray-600">
                 <span>Last month</span>
                 <span>Current month</span>
               </div>
             </div>
 
-            {/* 2) In-Progress Leads Chart */}
+            {/* In-Progress Leads Chart */}
             <div className="bg-white p-6 rounded-lg">
               <div style={{ width: "100%", height: 150 }}>
                 <ResponsiveContainer>
@@ -271,7 +324,7 @@ export default function ManagementDashboard() {
               </div>
             </div>
 
-            {/* 3) Sales by Lead Source Chart */}
+            {/* Sales by Lead Source Chart */}
             <div className="bg-white p-6 rounded-lg">
               <div style={{ width: "100%", height: 150 }}>
                 <ResponsiveContainer>
@@ -290,7 +343,7 @@ export default function ManagementDashboard() {
               </div>
             </div>
 
-            {/* 4) Sales Product by Retailers Chart */}
+            {/* Sales Product by Retailers Chart */}
             <div className="bg-white p-6 rounded-lg">
               <div style={{ width: "100%", height: 150 }}>
                 <ResponsiveContainer>
@@ -316,30 +369,21 @@ export default function ManagementDashboard() {
           <div className="flex flex-col md:flex-row md:items-start md:space-x-6 mt-6">
             {/* Commission Tracking Card */}
             <div className="bg-white p-6 rounded-lg border relative w-72 mb-6 md:mb-0">
-              {/* Card Header */}
               <div className="flex items-center">
-                {/* Icon */}
                 <div className="p-4 rounded-full bg-green-100 flex items-center justify-center">
                   <FaUsers className="text-blue-700 text-3xl" />
                 </div>
-                {/* Text (Left Aligned) */}
                 <div className="ml-3 text-left">
-                  <p className="text-gray-700 font-semibold">
-                    Commission Tracking
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    Update Commission Status
-                  </p>
+                  <p className="text-gray-700 font-semibold">Commission Tracking</p>
+                  <p className="text-gray-500 text-sm">Update Commission Status</p>
                 </div>
-                {/* Dropdown Toggle Button (Positioned Absolutely) */}
                 <button
                   onClick={() => toggleDropdown("commission")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
-              {/* Dropdown Content */}
               {activeDropdown === "commission" && (
                 <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-3 z-10 text-sm w-60">
                   <ul className="list-disc list-inside ml-4 text-gray-700">
@@ -352,28 +396,21 @@ export default function ManagementDashboard() {
 
             {/* Financial Reconciliation Reports Card */}
             <div className="bg-white p-6 rounded-lg border relative w-72">
-              {/* Card Header */}
               <div className="flex items-center">
-                {/* Icon */}
                 <div className="p-4 rounded-full bg-blue-100 flex items-center justify-center">
                   <FaDesktop className="text-blue-600 text-3xl" />
                 </div>
-                {/* Text (Left Aligned) */}
                 <div className="ml-3 text-left">
-                  <p className="text-gray-700 font-semibold">
-                    Financial Reconciliation Reports
-                  </p>
+                  <p className="text-gray-700 font-semibold">Financial Reconciliation Reports</p>
                   <p className="text-gray-500 text-sm">Generate Reports</p>
                 </div>
-                {/* Dropdown Toggle Button (Positioned Absolutely) */}
                 <button
                   onClick={() => toggleDropdown("financial")}
                   className="absolute top-2 right-2 text-gray-400"
                 >
-                  <FiChevronDown />
+                  <FiChevronDown className="text-gray-700 font-bold" />
                 </button>
               </div>
-              {/* Dropdown Content */}
               {activeDropdown === "financial" && (
                 <div className="absolute top-6 right-2 bg-white shadow-lg rounded-md p-3 z-10 text-sm w-60">
                   <ul className="list-disc list-inside ml-4 text-gray-700">
