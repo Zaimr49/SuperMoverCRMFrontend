@@ -129,7 +129,7 @@ const CreateAgentRoleProfile = () => {
                 <button
                   type="button"
                   onClick={() => document.getElementById("photoUpload").click()}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm "
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm  w-36 "
                 >
                   Change Photo
                 </button>
