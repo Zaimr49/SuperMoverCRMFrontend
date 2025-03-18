@@ -6,23 +6,18 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiArrowUp, FiArrowDown } from "react-icons/fi";
 import AuthContext from "../context/AuthContext";
-import Sidebar from "../components/Sidebar"; // Import Sidebar
+import Sidebar from "../components/Sidebar";
 import api from "../api";
 import { FaUserCheck, FaDesktop } from "react-icons/fa";
-import { FiArrowUp, FiArrowDown } from "react-icons/fi";
 import DataTable from "react-data-table-component";
 import "../styles/Dashboard.css";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 
+// Import only what we need from Recharts (no default Tooltip)
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+
+// List of possible statuses
 const statuses = [
   "New",
   "First Call Attempt",
@@ -42,6 +37,8 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+
+  // DataTable columns
   const columns = [
     {
       name: "Lead Name",
@@ -86,7 +83,9 @@ const Dashboard = () => {
     },
   ];
 
-  const monthlyEarningsData = [
+  // Monthly data for the bar chart
+  // We'll compute the "difference" and "isPositive" for each item
+  const [monthlyEarningsData, setMonthlyEarningsData] = useState([
     { month: "Jan", earnings: 4000 },
     { month: "Feb", earnings: 4500 },
     { month: "Mar", earnings: 6000 },
@@ -94,28 +93,86 @@ const Dashboard = () => {
     { month: "May", earnings: 3500 },
     { month: "Jun", earnings: 5500 },
     { month: "Jul", earnings: 6000 },
-    { month: "Aug", earnings: 9000, highlight: true }, // Highlighted month
+    { month: "Aug", earnings: 9000 }, // highlight example
     { month: "Sep", earnings: 7000 },
     { month: "Oct", earnings: 6500 },
     { month: "Nov", earnings: 5500 },
     { month: "Dec", earnings: 7000 },
-  ];
+  ]);
 
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-black text-white text-sm px-3 py-2 rounded shadow-md">
-          <p className="flex items-center">
-            <span className="mr-2">📈</span> {`${payload[0].value} USD`}
-          </p>
-        </div>
-      );
-    }
-    return null;
+  // Track which bar is hovered (for color highlight)
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  // State for custom tooltip
+  const [tooltipData, setTooltipData] = useState({
+    visible: false,
+    left: 0,
+    top: 0,
+    difference: 0,
+    isPositive: true,
+  });
+
+  // Mouse event handlers for the bars
+  const handleBarMouseEnter = (props, index) => {
+    const { x, y, width, height } = props;
+    setActiveIndex(index);
+
+    // Position the tooltip at the top center of the bar
+    const left = x + width / 2; // center horizontally
+    const top = y - 30; // 30px above the bar
+
+    // Retrieve difference data from monthlyEarningsData
+    const { difference, isPositive } = monthlyEarningsData[index];
+
+    setTooltipData({
+      visible: true,
+      left,
+      top,
+      difference,
+      isPositive,
+    });
   };
 
-  const renderBarColor = (data) => {
-    return data.highlight ? "#003399" : "rgba(0, 0, 0, 0.1)";
+  const handleBarMouseLeave = () => {
+    setActiveIndex(null);
+    setTooltipData((prev) => ({ ...prev, visible: false }));
+  };
+
+  // Pre-compute difference from the previous month
+  useEffect(() => {
+    const updated = [...monthlyEarningsData];
+    for (let i = 0; i < updated.length; i++) {
+      if (i === 0) {
+        updated[i].difference = 0;
+        updated[i].isPositive = true;
+      } else {
+        const prev = updated[i - 1].earnings;
+        const curr = updated[i].earnings;
+        const diff = ((curr - prev) / prev) * 100;
+        updated[i].difference = parseFloat(diff.toFixed(1));
+        updated[i].isPositive = diff >= 0;
+      }
+    }
+    setMonthlyEarningsData(updated);
+  }, []);
+
+  // Custom shape for each bar, so we can attach mouse events & get bar coords
+  const CustomBarShape = (props) => {
+    const { x, y, width, height, index } = props;
+
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={4}
+        ry={4}
+        fill={index === activeIndex ? "#003399" : "rgba(0, 0, 0, 0.1)"}
+        onMouseEnter={() => handleBarMouseEnter({ x, y, width, height }, index)}
+        onMouseLeave={handleBarMouseLeave}
+      />
+    );
   };
 
   // Fetch leads from API
@@ -126,10 +183,8 @@ const Dashboard = () => {
         const { data } = await api.get("/crm/flk/leads-db/", {
           params: payload,
         });
-        // console.log(data.leads)
         setLeads(data.leads);
         setTotalPages(data.totalPages);
-        // setCurrentPage(currentPage + 1)
       } catch (error) {
         console.error("Error fetching leads:", error);
       }
@@ -137,20 +192,20 @@ const Dashboard = () => {
     fetchLeads();
   }, [currentPage]);
 
+  // Helper for date formatting
   const formatDate = (dateString) => {
-    console.log(dateString);
-    let d = new Date(dateString);
-    console.log(d);
     const formattedDate = new Date(dateString).toISOString().split("T")[0];
     return formattedDate;
   };
 
+  // Helper for products
   const getProducts = (services) => {
     return Object.keys(services)
-      .filter((key) => services[key]) // Filter only keys with true values
-      .join(", "); // Join them with a comma
+      .filter((key) => services[key]) // only true keys
+      .join(", ");
   };
 
+  // Handle status change in the table
   const handleStatusChange = (id, newStatus) => {
     setLeads(
       leads.map((lead) =>
@@ -160,9 +215,13 @@ const Dashboard = () => {
     setSelectedStatus({ ...selectedStatus, [id]: newStatus });
   };
 
+  // Handle logout
   const handleLogout = () => {
     logout();
   };
+
+  // State for the new dropdown (Quarterly / Yearly)
+  const [timeFrame, setTimeFrame] = useState("Quarterly");
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -177,6 +236,7 @@ const Dashboard = () => {
         className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen"
         style={{ width: "75%" }}
       >
+        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
           <h1 className="text-2xl font-semibold mb-2 md:mb-0">
             Hello Orson 👋,
@@ -198,7 +258,6 @@ const Dashboard = () => {
         </header>
 
         {/* Stats Section */}
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-6">
           {/* New Leads Card */}
           <div className="flex bg-white p-6 rounded-lg shadow-md border items-center">
@@ -282,45 +341,6 @@ const Dashboard = () => {
           </div>
 
           <div className="overflow-x-auto">
-            {/* <table className="w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-3 border">Lead Name</th>
-                  <th className="p-3 border">Move-in Date</th>
-                  <th className="p-3 border">Phone Number</th>
-                  <th className="p-3 border">Email</th>
-                  <th className="p-3 border">Move-in Address</th>
-                  <th className="p-3 border">Product</th>
-                  <th className="p-3 border">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead) => (
-                  <tr key={lead.id} className="text-center">
-                    {console.log(lead)}
-                    <td className="p-3 border">{lead.customer_name}</td>
-                    <td className="p-3 border">{formatDate(lead.submitted)}</td>
-                    <td className="p-3 border">{lead.phone}</td>
-                    <td className="p-3 border">{lead.tenant.email}</td>
-                    <td className="p-3 border">{lead.address.text}</td>
-                    <td className="p-3 border">{getProducts(lead.services)}</td>
-                    <td className="p-3 border relative">
-                      <select
-                        className="border p-2 rounded-md bg-gray-100"
-                        value={selectedStatus[lead.id] || lead.status}
-                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                      >
-                        {statuses.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table> */}
             <DataTable
               title=""
               columns={columns}
@@ -335,29 +355,97 @@ const Dashboard = () => {
             />
           </div>
         </section>
-        <div className="bg-white p-6 rounded-lg shadow-md border">
-          <h2 className="text-xl font-semibold mb-2">Overview</h2>
-          <p className="text-gray-500 text-sm">Monthly Earning</p>
 
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart
-              data={monthlyEarningsData}
-              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-            >
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="earnings"
-                fill={(data) => renderBarColor(data)}
-                barSize={40}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        {/* Overview Bar Chart with custom bar-only tooltip & time-frame dropdown */}
+        <div className="bg-white p-5 rounded-lg shadow-md border relative">
+          {/* Top row: "Overview" & "Monthly Earning" on the left; dropdown on the right */}
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-xl pl-5 font-semibold text-left">Overview</h2>
+              <p className="text-gray-500 pl-5 text-sm text-left">
+                Monthly Earning
+              </p>
+            </div>
+            {/* Dropdown for Quarterly / Yearly */}
+            <div className="mr-5">
+              <select
+                className="border border-gray-300 rounded-md p-2 bg-gray-100 w-48 text-base text-gray-600 focus:border-gray-400 focus:ring-0"
+                value={timeFrame}
+                onChange={(e) => setTimeFrame(e.target.value)}
+              >
+                <option value="Quarterly">Quarterly</option>
+                <option value="Yearly">Yearly</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Chart in a relative container so we can absolutely position the tooltip */}
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart
+                data={monthlyEarningsData}
+                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+              >
+                {/* X-axis (months), Y-axis hidden */}
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#9CA3AF" }}
+                />
+                <YAxis hide />
+
+                {/* Use our custom shape to control tooltip position */}
+                <Bar
+                  dataKey="earnings"
+                  barSize={40}
+                  shape={<CustomBarShape />}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+
+            {/* Absolutely positioned tooltip */}
+            {tooltipData.visible && (
+              <div
+                className="bg-black text-white text-sm px-3 py-1 rounded shadow-md flex items-center pointer-events-none"
+                style={{
+                  position: "absolute",
+                  left: tooltipData.left - 40, // offset for centering
+                  top: tooltipData.top,
+                  zIndex: 9999,
+                }}
+              >
+                {tooltipData.isPositive ? (
+                  <FiArrowUp className="text-green-500 mr-1" />
+                ) : (
+                  <FiArrowDown className="text-red-500 mr-1" />
+                )}
+                <span className="text-white">
+                  {tooltipData.isPositive ? "+" : ""}
+                  {tooltipData.difference}%
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
   );
 };
+
+// ================== Helper Functions ====================
+
+// Format the date to YYYY-MM-DD
+function formatDate(dateString) {
+  const formattedDate = new Date(dateString).toISOString().split("T")[0];
+  return formattedDate;
+}
+
+// Get a comma-separated string of products from the "services" object
+function getProducts(services) {
+  return Object.keys(services)
+    .filter((key) => services[key])
+    .join(", ");
+}
 
 export default Dashboard;

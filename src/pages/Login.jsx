@@ -49,7 +49,8 @@ const Auth = () => {
       <div className="w-1/2 flex items-center justify-center bg-gray-100">
         {/* LOGIN/SIGNUP FORM */}
         <form onSubmit={handleSubmit}>
-          <div className="bg-white p-10 rounded-lg shadow-lg w-96">
+          {/* <div className="bg-white p-10 rounded-lg shadow-lg w-96 "> */}
+          <div className="bg-white p-10 rounded-lg shadow-lg w-[35rem] h-[38rem] flex flex-col justify-center">
             <h2 className="text-2xl mb-6 text-center">{isLogin ? "LOGIN" : "SIGN UP"}</h2>
 
             {/* Name Input (Only for Signup) */}
