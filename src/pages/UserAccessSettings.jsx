@@ -3,7 +3,6 @@ import { FiSearch, FiEdit2, FiUsers, FiMoreVertical } from "react-icons/fi";
 import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-
 import Sidebar from "../components/Sidebar";
 import "../styles/Dashboard.css";
 
@@ -11,42 +10,77 @@ import "../styles/Dashboard.css";
 const defaultRoles = [
   {
     id: 1,
+    firstName: "John",
+    lastName: "Smith",
     role: "Lead Manager",
     users: 1,
     lastUpdated: "June 5, 2023, 4:36 PM",
     createdBy: "John Smith",
+    phone: "123-456-7890",
+    mobile: "987-654-3210",
+    email: "john.smith@example.com",
+    position: "Lead Manager",
+    category: "Management",
     avatar: "https://randomuser.me/api/portraits/men/30.jpg",
   },
   {
     id: 2,
+    firstName: "Charlotte",
+    lastName: "R.",
     role: "Sales Manager",
     users: 1,
     lastUpdated: "Sep 16, 2023, 3:45 PM",
     createdBy: "Charlotte R.",
+    phone: "123-555-7890",
+    mobile: "987-555-3210",
+    email: "charlotte.r@example.com",
+    position: "Sales Manager",
+    category: "Sales",
     avatar: "https://randomuser.me/api/portraits/women/31.jpg",
   },
   {
     id: 3,
+    firstName: "Sarah",
+    lastName: "Johnson",
     role: "Sales & Lead Team",
     users: 7,
     lastUpdated: "Sep 16, 2023, 5:25 PM",
     createdBy: "Sarah J.",
+    phone: "111-222-3333",
+    mobile: "999-888-7777",
+    email: "sarah.j@example.com",
+    position: "Sales & Lead Team",
+    category: "Sales",
     avatar: "https://randomuser.me/api/portraits/women/45.jpg",
   },
   {
     id: 4,
+    firstName: "David",
+    lastName: "West",
     role: "Finance Manager",
     users: 1,
     lastUpdated: "Oct 18, 2023, 3:20 PM",
     createdBy: "David West",
+    phone: "444-555-6666",
+    mobile: "666-555-4444",
+    email: "david.west@example.com",
+    position: "Finance Manager",
+    category: "Finance",
     avatar: "https://randomuser.me/api/portraits/men/50.jpg",
   },
   {
     id: 5,
+    firstName: "Robert",
+    lastName: "M.",
     role: "Operations Manager",
     users: 1,
     lastUpdated: "Oct 03, 2023, 6:25 PM",
     createdBy: "Robert M.",
+    phone: "777-888-9999",
+    mobile: "888-777-6666",
+    email: "robert.m@example.com",
+    position: "Operations Manager",
+    category: "Operations",
     avatar: "https://randomuser.me/api/portraits/men/48.jpg",
   },
 ];
@@ -195,7 +229,10 @@ const UserAccessSettings = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md" onClick={() => navigate("/create-agent-profile")}>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+                onClick={() => navigate("/create-agent-profile")}
+              >
                 Create Role & Profile
               </button>
             </div>
@@ -273,7 +310,7 @@ const UserAccessSettings = () => {
                           <FiUsers size={18} />
                         </button>
                         <button className="inline-block text-gray-500 hover:text-gray-700 mr-4">
-                          <FiEdit2 size={18} />
+                          <FiEdit2 size={18} onClick={() => navigate("/edit-agent-profile", { state: role })} />
                         </button>
                         <button className="inline-block text-gray-500 hover:text-gray-700">
                           <FiMoreVertical size={18} />
