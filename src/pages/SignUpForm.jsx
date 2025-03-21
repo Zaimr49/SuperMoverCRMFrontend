@@ -1,8 +1,8 @@
-import React, { useState, useRef, createRef } from "react";
+import React, { useState, useRef, createRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import classNames from "classnames";
-import Sidebar from "../components/Sidebar"; // Import Sidebar
-import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar"; // Import your Sidebar component
 
 /** Utility to combine Tailwind classes. */
 function cn(...classes) {
@@ -16,8 +16,7 @@ function Button({ onClick, disabled, className, children, ...props }) {
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={cn(
-        " px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 " +
-          "focus:ring-offset-2 transition-colors text-[16px]",
+        "px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors text-[16px]",
         className
       )}
       {...props}
@@ -28,7 +27,10 @@ function Button({ onClick, disabled, className, children, ...props }) {
 }
 
 export default function SignUpForm() {
-  // Steps array
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Steps for the multi-step form
   const [steps, setSteps] = useState([
     { id: 1, title: "Sale Type", isOpen: true },
     { id: 2, title: "Customer Details", isOpen: false },
@@ -44,12 +46,10 @@ export default function SignUpForm() {
     { id: 0, title: "Confirmation & Submission", isOpen: false, isFinal: true },
   ]);
 
-  // State for the date picker (Step 6)
+  // Calendar state (for Step 6)
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const stepRefs = useRef({}); // We'll fill in refs for each step
-  const navigate = useNavigate();
   const monthNames = [
     "January",
     "February",
@@ -65,16 +65,16 @@ export default function SignUpForm() {
     "December",
   ];
 
+  const stepRefs = useRef({});
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Include fields in formData for All Steps
+  // Form data state for all steps
   const [formData, setFormData] = useState({
-    // Step 1 fields:
-    connectionType: "", // "moveIn" or "transfer"
-    products: [], // e.g. ["electricity","gas","broadband"]
-    customerType: "", // "residential" or "business"
-
-    // Step 2 fields:
+    // Step 1:
+    connectionType: "",
+    products: [],
+    customerType: "",
+    // Step 2:
     title: "",
     firstName: "",
     lastName: "",
@@ -84,63 +84,84 @@ export default function SignUpForm() {
     isBillingSameAsPhysical: true,
     billingAddress: "",
     howDidYouHear: "",
-
-    // Step 3 fields:
-    isOwner: null, // true or false
-    hasSolar: null, // true or false
-
-    // Step 4 fields:
+    // Step 3:
+    isOwner: null,
+    hasSolar: null,
+    // Step 4:
     dob: "",
-    verificationMethod: "", // e.g. "Driver's License", "Passport", "Medicare"
+    verificationMethod: "",
     idNumber: "",
     idExpiry: "",
     homePhone: "",
     mobilePhone: "",
     confirmEmail: "",
-
-    // Step 5 fields:
-    wantsSecondaryContact: null, // true or false
+    // Step 5:
+    wantsSecondaryContact: null,
     secondaryTitle: "",
     secondaryFirstName: "",
     secondaryLastName: "",
     secondaryMobile: "",
     secondaryHomePhone: "",
     secondaryEmail: "",
-
-    // Step 6 fields:
+    // Step 6:
     moveInDate: null,
-    hasBeenDisconnected12Months: null, // true / false
-    hasBuildingElectricalWorks: null, // true / false
-    hasClearMeterAccess: null, // true / false
-
-    // Step 7 fields:
-    lifeSupport: null, // true/false
-    isConcessionHolder: null, // true/false
+    hasBeenDisconnected12Months: null,
+    hasBuildingElectricalWorks: null,
+    hasClearMeterAccess: null,
+    // Step 7:
+    lifeSupport: null,
+    isConcessionHolder: null,
     concessionType: "",
     concessionCardNumber: "",
     concessionCardStartDate: "",
     concessionCardExpiryDate: "",
-
     // Step 8:
-    medicalCoolingConcession: null, // true/false
-    concessionerDeclarationProvided: null, // true/false
-
+    medicalCoolingConcession: null,
+    concessionerDeclarationProvided: null,
     // Step 9:
-    consentElectronicBills: null, // true/false
-    allCommunicationSameMethod: null, // true/false
-    usePrimaryEmailForAll: null, // true/false
-    isPostalAddressCorrect: null, // true/false
-
+    consentElectronicBills: null,
+    allCommunicationSameMethod: null,
+    usePrimaryEmailForAll: null,
+    isPostalAddressCorrect: null,
     // Step 10:
-    monthlyBillsOk: null, // yes/no
-    promotionalContactConsent: null, // yes/no
-
+    monthlyBillsOk: null,
+    promotionalContactConsent: null,
     // Step 11:
-    hasReviewedMarketOfferSummary: null, // or you can store “true”/“false” if they clicked
-    hasReviewedEICScript: null, // or similarly store “true”/“false”
+    hasReviewedMarketOfferSummary: null,
+    hasReviewedEICScript: null,
   });
 
-  // Toggle open/close for each step
+  // Use effect to receive data passed from previous page (if any)
+  useEffect(() => {
+    if (location.state) {
+      // Map the incoming data to your formData.
+      // For example, if the previous page passed firstName, lastName, email, phoneMobile, billingAddress, selectedProducts, and moveInDate:
+      setFormData((prev) => ({
+        ...prev,
+        firstName: location.state.firstName || prev.firstName,
+        lastName: location.state.lastName || prev.lastName,
+        email: location.state.email || prev.email,
+        // Map phoneMobile to bestContactNumber
+        bestContactNumber: location.state.phoneMobile || prev.bestContactNumber,
+        // Use the billing address from the previous page as the physicalAddress and billingAddress
+        physicalAddress: location.state.billingAddress || prev.physicalAddress,
+        billingAddress: location.state.billingAddress || prev.billingAddress,
+        // Convert moveInDate (if provided) to a Date object
+        moveInDate: location.state.moveInDate
+          ? new Date(location.state.moveInDate)
+          : prev.moveInDate,
+        // If selectedProducts was sent as an object (e.g. { electricity: true, gas: false, ... }),
+        // convert it to an array of product names for which the value is true:
+        products: location.state.selectedProducts
+          ? Object.entries(location.state.selectedProducts)
+              .filter(([key, value]) => value)
+              .map(([key]) => key)
+          : prev.products,
+      }));
+    }
+  }, [location.state]);
+
+  // Toggle a step open/close
   const toggleStep = (stepId) => {
     setSteps((prevSteps) =>
       prevSteps.map((step) => ({
@@ -150,12 +171,11 @@ export default function SignUpForm() {
     );
   };
 
-  // Step 1: Single-select for connection type
+  // Step 1: Handlers
   const handleConnectionTypeSelect = (type) => {
     setFormData((prev) => ({ ...prev, connectionType: type }));
   };
 
-  // Step 1: Multi-select for products
   const handleProductSelect = (product) => {
     setFormData((prev) => {
       const products = prev.products.includes(product)
@@ -165,7 +185,6 @@ export default function SignUpForm() {
     });
   };
 
-  // Step 1: Single-select for customer type
   const handleCustomerTypeSelect = (type) => {
     setFormData((prev) => ({ ...prev, customerType: type }));
   };
@@ -176,29 +195,26 @@ export default function SignUpForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Move to next step
+  // Next step handler
   function handleNextStep() {
     const nextStepId = currentStep + 1;
     const nextStep = steps.find((step) => step.id === nextStepId);
-
     if (nextStep) {
       setSteps((prevSteps) =>
         prevSteps.map((s) => ({
           ...s,
-          isOpen: s.id === nextStepId, // open next step
+          isOpen: s.id === nextStepId,
         }))
       );
       setCurrentStep(nextStepId);
-
-      // Scroll *after* state updates (use a small timeout or useEffect)
       setTimeout(() => {
         stepRefs.current[nextStepId]?.current?.scrollIntoView({
           behavior: "smooth",
-          block: "start", // or 'center'
+          block: "start",
         });
       }, 0);
     } else {
-      // If no next step, open final step (id=0)
+      // If no next step, open the final step (id=0)
       setSteps((prevSteps) =>
         prevSteps.map((s) => ({
           ...s,
@@ -206,7 +222,6 @@ export default function SignUpForm() {
         }))
       );
       setCurrentStep(0);
-
       setTimeout(() => {
         stepRefs.current[0]?.current?.scrollIntoView({
           behavior: "smooth",
@@ -216,9 +231,7 @@ export default function SignUpForm() {
     }
   }
 
-  /**
-   * Update button/toggle classes to use #1951A4
-   */
+  // Toggle button style helper
   const getToggleButtonClasses = (isSelected, isDisabled) => {
     if (isDisabled) {
       return "bg-red-400 text-white cursor-not-allowed text-[16px] font-normal";
@@ -228,7 +241,7 @@ export default function SignUpForm() {
       : "bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal";
   };
 
-  // --------- Step 6: Calendar logic ----------
+  // ---------- Calendar functions for Step 6 ----------
   function changeMonth(offset) {
     const newDate = new Date(
       currentDate.getFullYear(),
@@ -247,13 +260,11 @@ export default function SignUpForm() {
   function renderCalendarDays() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-
     const slots = [];
 
-    // Fill in empty days before 1st
+    // Empty slots before the 1st day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       slots.push(
         <div key={`empty-${i}`} className="text-center text-sm text-gray-300" />
@@ -265,7 +276,6 @@ export default function SignUpForm() {
       const thisDate = new Date(year, month, day);
       const isSelected =
         selectedDate && thisDate.toDateString() === selectedDate.toDateString();
-
       slots.push(
         <div
           key={day}
@@ -279,10 +289,9 @@ export default function SignUpForm() {
         </div>
       );
     }
-
     return slots;
   }
-  // --------------------------------------------
+  // ---------------------------------------------------
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-white">
@@ -297,7 +306,6 @@ export default function SignUpForm() {
         className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen"
         style={{ width: "75%" }}
       >
-        {/* Back Button at Top Right */}
         <div className="flex justify-end mb-4">
           <Button
             onClick={() => navigate("/lead-capture-form")}
@@ -306,14 +314,12 @@ export default function SignUpForm() {
             Back
           </Button>
         </div>
-        {/* // <div className="max-w-6xl mx-auto px-2 py-6 bg-white text-left text-gray-800"> */}
         <div className="px-2 py-6 bg-white text-left text-gray-800">
           {steps.map((step) => {
-            // If we haven't created a ref for this step yet, do it now
+            // Create refs for each step if not already done
             if (!stepRefs.current[step.id]) {
               stepRefs.current[step.id] = createRef();
             }
-
             return (
               <div
                 key={step.id}
@@ -338,10 +344,7 @@ export default function SignUpForm() {
                     )}
                   />
                 </button>
-
-                {/* Thinner yellow divider */}
                 <div className="border-t border-yellow-400 mt-2 mb-4" />
-
                 {step.isOpen && (
                   <div className="pl-2">
                     {/* STEP 1 CONTENT */}
@@ -351,8 +354,6 @@ export default function SignUpForm() {
                           Let&apos;s start with some basic details to get you
                           connected!
                         </p>
-
-                        {/* Move In / Transfer */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Is this a new connection or a transfer?
@@ -382,8 +383,6 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
-
-                        {/* Products */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             What products do you need?
@@ -430,8 +429,6 @@ export default function SignUpForm() {
                             (Color red, not activated in phase 1)
                           </p>
                         </div>
-
-                        {/* Residential / Business */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Are you signing up as a:
@@ -461,8 +458,6 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
-
-                        {/* Next Step (centered) */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -480,8 +475,6 @@ export default function SignUpForm() {
                         <p className="mb-4 text-[20px]">
                           We&apos;ll need some details to create your account.
                         </p>
-
-                        {/* Title */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             What&apos;s your title? (Optional)
@@ -508,8 +501,6 @@ export default function SignUpForm() {
                             )}
                           </div>
                         </div>
-
-                        {/* First Name */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your first name?
@@ -523,8 +514,6 @@ export default function SignUpForm() {
                             placeholder="Jane"
                           />
                         </div>
-
-                        {/* Last Name */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             And your last name?
@@ -538,8 +527,6 @@ export default function SignUpForm() {
                             placeholder="Marry"
                           />
                         </div>
-
-                        {/* Best Contact Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Best contact number?
@@ -553,8 +540,6 @@ export default function SignUpForm() {
                             placeholder="0432 111 111"
                           />
                         </div>
-
-                        {/* Email */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Your email address?
@@ -568,8 +553,6 @@ export default function SignUpForm() {
                             placeholder="Jane@gmail.com.au"
                           />
                         </div>
-
-                        {/* Physical Address */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your physical address?
@@ -583,8 +566,6 @@ export default function SignUpForm() {
                             placeholder="49 High Street Road, Ashwood VIC 3147"
                           />
                         </div>
-
-                        {/* Billing Address same as Physical? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Is your billing address the same as your physical
@@ -621,8 +602,6 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
-
-                        {/* Billing Address (only if "No") */}
                         {!formData.isBillingSameAsPhysical && (
                           <div className="mb-4">
                             <label className="block mb-1 text-[16px] font-semibold">
@@ -638,8 +617,6 @@ export default function SignUpForm() {
                             />
                           </div>
                         )}
-
-                        {/* How did you hear about us? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             How did you hear about us?
@@ -670,7 +647,6 @@ export default function SignUpForm() {
                             ))}
                           </div>
                         </div>
-
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -688,8 +664,6 @@ export default function SignUpForm() {
                         <p className="mb-4 text-[20px]">
                           A few more details to set up your account.
                         </p>
-
-                        {/* Are you the owner of this property? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Are you the owner of this property?
@@ -725,8 +699,6 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
-
-                        {/* Does property have solar panels? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Does the property have solar panels installed?
@@ -762,7 +734,6 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
-
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -781,8 +752,6 @@ export default function SignUpForm() {
                           We need to verify your identity to set up your account
                           securely.
                         </p>
-
-                        {/* Date of Birth */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your date of birth?
@@ -792,14 +761,10 @@ export default function SignUpForm() {
                             name="dob"
                             value={formData.dob}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="DD/MM/YYYY"
                           />
                         </div>
-
-                        {/* Identity Verification Method */}
                         <div className="mb-4">
                           <label className="block mb-2 text-[16px] font-semibold">
                             How would you like to verify your identity?
@@ -826,8 +791,6 @@ export default function SignUpForm() {
                             )}
                           </div>
                         </div>
-
-                        {/* ID Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Enter your selected ID number:
@@ -837,14 +800,10 @@ export default function SignUpForm() {
                             name="idNumber"
                             value={formData.idNumber}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="ID number"
                           />
                         </div>
-
-                        {/* Expiry date */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Expiry date of your ID?
@@ -854,14 +813,10 @@ export default function SignUpForm() {
                             name="idExpiry"
                             value={formData.idExpiry}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="MM/YYYY"
                           />
                         </div>
-
-                        {/* Home Phone (Optional) */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Home phone number? (Optional)
@@ -871,14 +826,10 @@ export default function SignUpForm() {
                             name="homePhone"
                             value={formData.homePhone}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="(07) 1234 5678"
                           />
                         </div>
-
-                        {/* Mobile Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Mobile number?
@@ -888,14 +839,10 @@ export default function SignUpForm() {
                             name="mobilePhone"
                             value={formData.mobilePhone}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="0432 123 456"
                           />
                         </div>
-
-                        {/* Confirm Email */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Confirm your email address:
@@ -905,13 +852,10 @@ export default function SignUpForm() {
                             name="confirmEmail"
                             value={formData.confirmEmail}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                 text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                             placeholder="Repeat your email"
                           />
                         </div>
-
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -959,14 +903,11 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
                         {formData.wantsSecondaryContact && (
                           <>
                             <p className="mb-4 text-[20px]">
                               Please provide the secondary contact details.
                             </p>
-
-                            {/* Title */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 What&apos;s their title?
@@ -993,8 +934,6 @@ export default function SignUpForm() {
                                 )}
                               </div>
                             </div>
-
-                            {/* First Name */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 First name?
@@ -1004,14 +943,10 @@ export default function SignUpForm() {
                                 name="secondaryFirstName"
                                 value={formData.secondaryFirstName}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                     placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="Jane"
                               />
                             </div>
-
-                            {/* Last Name */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Last name?
@@ -1021,14 +956,10 @@ export default function SignUpForm() {
                                 name="secondaryLastName"
                                 value={formData.secondaryLastName}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                     placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="Marry"
                               />
                             </div>
-
-                            {/* Secondary Mobile Number */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary mobile number?
@@ -1038,14 +969,10 @@ export default function SignUpForm() {
                                 name="secondaryMobile"
                                 value={formData.secondaryMobile}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                     placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="0432 111 111"
                               />
                             </div>
-
-                            {/* Secondary Home Phone (Optional) */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary home phone number? (Optional)
@@ -1055,14 +982,10 @@ export default function SignUpForm() {
                                 name="secondaryHomePhone"
                                 value={formData.secondaryHomePhone}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                     placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="(07) 7654 3210"
                               />
                             </div>
-
-                            {/* Secondary Email Address */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary email address?
@@ -1072,15 +995,12 @@ export default function SignUpForm() {
                                 name="secondaryEmail"
                                 value={formData.secondaryEmail}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                                     text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                                     placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="Jane@gmail.com.au"
                               />
                             </div>
                           </>
                         )}
-
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1092,43 +1012,37 @@ export default function SignUpForm() {
                       </>
                     )}
 
-                    {/* STEP 6 CONTENT: Move-In Details (with Tailwind date picker) */}
+                    {/* STEP 6 CONTENT: Move-In Details */}
                     {step.id === 6 && (
                       <>
                         <p className="mb-4 text-[20px]">
                           Let&apos;s get your connection sorted. A few quick
                           questions to ensure a smooth process!
                         </p>
-
-                        {/* 1) Preferred Move-In Date */}
                         <div className="mb-6">
                           <label className="block text-[16px] font-semibold mb-2">
                             When is your preferred move-in date?
                           </label>
                           <div className="relative">
-                            {/* 'Date picker input' */}
                             <div
                               className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer w-72"
                               onClick={() => setShowCalendar(!showCalendar)}
                             >
                               <span>
                                 {formData.moveInDate
-                                  ? formData.moveInDate.toLocaleDateString(
-                                      "en-US",
-                                      {
-                                        day: "numeric",
-                                        month: "long",
-                                        year: "numeric",
-                                      }
-                                    )
+                                  ? new Date(
+                                      formData.moveInDate
+                                    ).toLocaleDateString("en-US", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })
                                   : "Select a date"}
                               </span>
                               <Calendar size={20} color="#fff" />
                             </div>
-
                             {showCalendar && (
                               <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 shadow-lg">
-                                {/* Calendar header */}
                                 <div className="flex items-center justify-between p-2 border-b border-gray-100 bg-gray-50">
                                   <ChevronLeft
                                     size={16}
@@ -1147,8 +1061,6 @@ export default function SignUpForm() {
                                     onClick={() => changeMonth(1)}
                                   />
                                 </div>
-
-                                {/* Weekdays + Days Grid */}
                                 <div className="grid grid-cols-7 gap-2 p-2 text-center">
                                   {[
                                     "Su",
@@ -1172,8 +1084,6 @@ export default function SignUpForm() {
                             )}
                           </div>
                         </div>
-
-                        {/* 2) Disconnected > 12 months? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Has the electricity supply at the property been
@@ -1209,7 +1119,6 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
-
                           {formData.hasBeenDisconnected12Months && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
@@ -1225,8 +1134,6 @@ export default function SignUpForm() {
                             </div>
                           )}
                         </div>
-
-                        {/* 3) Building / Electrical Works? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Have there been any building or electrical works
@@ -1263,7 +1170,6 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
-
                           {formData.hasBuildingElectricalWorks && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
@@ -1274,8 +1180,6 @@ export default function SignUpForm() {
                             </div>
                           )}
                         </div>
-
-                        {/* 4) Clear & Safe Access? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Is there clear and safe access to the electricity
@@ -1311,7 +1215,6 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
-
                           {formData.hasClearMeterAccess === false && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
@@ -1323,7 +1226,6 @@ export default function SignUpForm() {
                             </div>
                           )}
                         </div>
-
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1342,8 +1244,6 @@ export default function SignUpForm() {
                           We want to ensure you have the necessary support and
                           benefits.
                         </p>
-
-                        {/* Life Support Question */}
                         <p className="mb-2 text-[16px]">
                           Do you or anyone at the property rely on life support
                           equipment that requires electricity?
@@ -1378,7 +1278,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
                         {formData.lifeSupport && (
                           <p className="bg-yellow-100 text-sm text-gray-700 p-2 rounded mb-6">
                             We’ll include a Life Support Form in your welcome
@@ -1387,8 +1286,6 @@ export default function SignUpForm() {
                             by gas, please notify your current gas retailer.
                           </p>
                         )}
-
-                        {/* Concession Card Question */}
                         <p className="mb-2 text-[16px]">
                           Are you a Concession Card holder?
                         </p>
@@ -1422,16 +1319,12 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* Concession Card Details */}
                         {formData.isConcessionHolder && (
                           <>
                             <p className="text-sm text-gray-500 mb-4">
                               (If yes, please provide your concession card
                               details.)
                             </p>
-
-                            {/* Concession Types (buttons) */}
                             <div className="mb-4">
                               <p className="font-semibold text-[16px] mb-2">
                                 Concession Type:
@@ -1463,8 +1356,6 @@ export default function SignUpForm() {
                                 ))}
                               </div>
                             </div>
-
-                            {/* Concession Card Number */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Number:
@@ -1474,14 +1365,10 @@ export default function SignUpForm() {
                                 name="concessionCardNumber"
                                 value={formData.concessionCardNumber}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                       placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="e.g. 1234-5678-XX"
                               />
                             </div>
-
-                            {/* Concession Card Start Date */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Start Date:
@@ -1491,14 +1378,10 @@ export default function SignUpForm() {
                                 name="concessionCardStartDate"
                                 value={formData.concessionCardStartDate}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                       placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="DD/MM/YYYY"
                               />
                             </div>
-
-                            {/* Concession Card Expiry Date */}
                             <div className="mb-6">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Expiry Date:
@@ -1508,16 +1391,12 @@ export default function SignUpForm() {
                                 name="concessionCardExpiryDate"
                                 value={formData.concessionCardExpiryDate}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
-                       text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
-                       placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
                                 placeholder="DD/MM/YYYY"
                               />
                             </div>
                           </>
                         )}
-
-                        {/* Next Step Button */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1536,8 +1415,6 @@ export default function SignUpForm() {
                           We want to ensure you receive any eligible
                           concessions.
                         </p>
-
-                        {/* 1) Medical Cooling Concession */}
                         <p className="mb-2 text-[16px]">
                           Do you have a Medical Cooling Concession?
                         </p>
@@ -1571,15 +1448,12 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
                         {formData.medicalCoolingConcession && (
                           <p className="mb-4 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                             Please review the attached Concession Consent Script
                             before proceeding.
                           </p>
                         )}
-
-                        {/* 2) Concessioner Declaration */}
                         <p className="mb-2 text-[16px]">
                           Concessioner Declaration Provided?
                         </p>
@@ -1614,8 +1488,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1634,8 +1506,6 @@ export default function SignUpForm() {
                           Tell us how you&apos;d like to receive your bills and
                           updates.
                         </p>
-
-                        {/* 1) Consent to Electronic Bills? */}
                         <p className="mb-2 text-[16px]">
                           Do you consent to receiving bills, notices, and other
                           documents related to your energy supply
@@ -1671,8 +1541,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* 2) All Communication Same Method? */}
                         <p className="mb-2 text-[16px]">
                           Would you prefer all communication via the same
                           method?
@@ -1707,8 +1575,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* 3) Use Primary Contact Email? (only if all comm. same method is Yes) */}
                         {formData.allCommunicationSameMethod && (
                           <>
                             <p className="mb-2 text-[16px]">
@@ -1748,8 +1614,6 @@ export default function SignUpForm() {
                             </div>
                           </>
                         )}
-
-                        {/* 4) Postal Address Correct? */}
                         <p className="mb-2 text-[16px]">
                           Is your postal address correct?
                         </p>
@@ -1783,8 +1647,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1803,8 +1665,6 @@ export default function SignUpForm() {
                           A few final details about your billing and
                           communication preferences..
                         </p>
-
-                        {/* 1) Monthly Bills OK? */}
                         <p className="mb-2 text-[16px]">
                           We’ll send you bills monthly, based on meter reads
                           provided by your meter data provider. Is that OK?
@@ -1839,8 +1699,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* 2) Promotional Contact Consent */}
                         <p className="mb-2 text-[16px]">
                           We may contact you from time to time via phone, email,
                           SMS, or other means to promote products and offers,
@@ -1878,8 +1736,6 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
-
-                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1898,13 +1754,9 @@ export default function SignUpForm() {
                           Please review the Electricity Market Offer Contract
                           Summary and EIC Script before completing your sign-up.
                         </p>
-
-                        {/* Button: Market Offer Contract Summary */}
                         <div className="mb-4">
                           <Button
                             onClick={() => {
-                              // e.g., open a modal or PDF link
-                              // setFormData((prev) => ({ ...prev, hasReviewedMarketOfferSummary: true }));
                               alert("Opening Market Offer Contract Summary...");
                             }}
                             className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
@@ -1916,13 +1768,9 @@ export default function SignUpForm() {
                             terms, including rates, fees, and conditions.
                           </p>
                         </div>
-
-                        {/* Button: EIC Script */}
                         <div className="mb-6">
                           <Button
                             onClick={() => {
-                              // e.g., open a modal or PDF link
-                              // setFormData((prev) => ({ ...prev, hasReviewedEICScript: true }));
                               alert("Opening EIC Script...");
                             }}
                             className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
@@ -1932,11 +1780,9 @@ export default function SignUpForm() {
                           <p className="mt-2 text-sm text-gray-700">
                             Sales agent reads the EIC script, confirming the
                             customer’s understanding and agreement to the
-                            contract terms..
+                            contract terms.
                           </p>
                         </div>
-
-                        {/* Next Step (or final) */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
@@ -1948,33 +1794,12 @@ export default function SignUpForm() {
                       </>
                     )}
 
-                    {/* PLACEHOLDER for STEPS 6..11 (unchanged)
-              {![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(step.id) &&
-                !step.isFinal && (
-                  <>
-                    <p className="mb-6 text-[20px]">
-                      Content for <strong>{step.title}</strong> goes here.
-                    </p>
-                    <div className="flex justify-center">
-                      <Button
-                        onClick={handleNextStep}
-                        className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
-                      >
-                        Next Step
-                      </Button>
-                    </div>
-                  </>
-                )} */}
-
                     {/* Final Step */}
                     {step.isFinal && (
                       <>
-                        {/* Sub-heading or instructions */}
                         <p className="mb-3 text-[20px]">
                           Review all your details and confirm they are correct.
                         </p>
-
-                        {/* Confirm & Submit Button */}
                         <div className="flex mb-4">
                           <Button
                             onClick={() => alert("Submitting...")}
@@ -1983,8 +1808,6 @@ export default function SignUpForm() {
                             Confirm &amp; Submit
                           </Button>
                         </div>
-
-                        {/* Completion note */}
                         <p className="text-[16px] text-gray-700">
                           That&apos;s it! Your sign-up is complete. You&apos;ll
                           receive a confirmation shortly. If you have any

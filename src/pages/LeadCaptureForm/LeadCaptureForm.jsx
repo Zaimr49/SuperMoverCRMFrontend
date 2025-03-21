@@ -40,6 +40,10 @@ const LeadCaptureForm = () => {
   const [suburb, setSuburb] = useState("Auto populate");
   const [postCode, setPostCode] = useState("Auto populate");
   const [stateName, setStateName] = useState("Auto populate");
+  const [reaOfficeDetails, setReaOfficeDetails] = useState("");
+  const [referredAgentName, setReferredAgentName] = useState("");
+  const [reaSoftwareUsed, setReaSoftwareUsed] = useState("");
+
   const navigate = useNavigate();
 
   const monthNames = [
@@ -219,6 +223,10 @@ const LeadCaptureForm = () => {
       stateName,
       selectedProducts,
       moveInDate: selectedDate,
+      reaOfficeDetails,
+      referredAgentName,
+      reaSoftwareUsed,
+      // Add any additional fields here...
     };
     navigate("/signup-form", { state: data });
   };
@@ -253,8 +261,10 @@ const LeadCaptureForm = () => {
             </h2>
             <div className="form-fields-grid">
               <div className="form-field">
-                <label><span class="text-sm text-red-500">*</span>
-                First Name:</label>
+                <label>
+                  <span class="text-sm text-red-500">*</span>
+                  First Name:
+                </label>
                 <input
                   type="text"
                   placeholder="Enter your first name"
@@ -265,12 +275,15 @@ const LeadCaptureForm = () => {
                   }}
                 />
                 {firstNameError && (
-                  <span className="error-message" style={{ color: "red" }}>{firstNameError}</span>
+                  <span className="error-message" style={{ color: "red" }}>
+                    {firstNameError}
+                  </span>
                 )}
               </div>
               <div className="form-field">
-                
-                <label><span class="text-sm text-red-500">*</span>Last Name:</label>
+                <label>
+                  <span class="text-sm text-red-500">*</span>Last Name:
+                </label>
                 <input
                   type="text"
                   placeholder="Enter your last name"
@@ -281,11 +294,15 @@ const LeadCaptureForm = () => {
                   }}
                 />
                 {lastNameError && (
-                  <span className="error-message" style={{ color: "red" }}>{lastNameError}</span>
+                  <span className="error-message" style={{ color: "red" }}>
+                    {lastNameError}
+                  </span>
                 )}
               </div>
               <div className="form-field">
-                <label><span class="text-sm text-red-500">*</span>Contact Number:</label>
+                <label>
+                  <span class="text-sm text-red-500">*</span>Contact Number:
+                </label>
                 <input
                   type="text"
                   placeholder="Enter your contact number"
@@ -326,7 +343,9 @@ const LeadCaptureForm = () => {
                   }}
                 />
                 {emailError && (
-                  <span className="error-message" style={{ color: "red" }}>{emailError}</span>
+                  <span className="error-message" style={{ color: "red" }}>
+                    {emailError}
+                  </span>
                 )}
               </div>
             </div>
@@ -474,7 +493,7 @@ const LeadCaptureForm = () => {
               </span>
             </h2>
             <div className="form-fields-grid">
-              <div className="form-field">
+              {/* <div className="form-field">
                 <label>REA Office Details:</label>
                 <input type="text" placeholder="Test" />
               </div>
@@ -489,6 +508,37 @@ const LeadCaptureForm = () => {
                   (Optional: Name of software used by the REA)
                 </label>
                 <input type="text" placeholder="Test" />
+              </div> */}
+              <div className="form-field">
+                <label>REA Office Details:</label>
+                <input
+                  type="text"
+                  placeholder="Enter office details"
+                  value={reaOfficeDetails}
+                  onChange={(e) => setReaOfficeDetails(e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label>Referred Agent Name:</label>
+                <input
+                  type="text"
+                  placeholder="Enter agent name"
+                  value={referredAgentName}
+                  onChange={(e) => setReferredAgentName(e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label>
+                  REA Software Used (if known):
+                  <br />
+                  (Optional: Name of software used by the REA)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter software name"
+                  value={reaSoftwareUsed}
+                  onChange={(e) => setReaSoftwareUsed(e.target.value)}
+                />
               </div>
             </div>
           </div>
