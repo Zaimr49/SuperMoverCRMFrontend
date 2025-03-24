@@ -43,6 +43,10 @@ const LeadCaptureForm = () => {
   const [reaOfficeDetails, setReaOfficeDetails] = useState("");
   const [referredAgentName, setReferredAgentName] = useState("");
   const [reaSoftwareUsed, setReaSoftwareUsed] = useState("");
+  const [nmi, setNmi] = useState("");
+  const [mirn, setMirn] = useState("");
+  const [nmiError, setNmiError] = useState("");
+  const [mirnError, setMirnError] = useState("");
 
   const navigate = useNavigate();
 
@@ -80,6 +84,33 @@ const LeadCaptureForm = () => {
       setEmailError("Invalid email format.");
       isValid = false;
     }
+
+    // Validate NMI if electricity is selected
+    if (selectedProducts.electricity) {
+      if (!nmi.trim()) {
+        setNmiError("Required");
+        isValid = false;
+      } else if (!/^\d{10,11}$/.test(nmi.trim())) {
+        setNmiError("NMI must be 10–11 digits.");
+        isValid = false;
+      } else {
+        setNmiError("");
+      }
+    }
+
+    // Validate MIRN if gas is selected
+    if (selectedProducts.gas) {
+      if (!mirn.trim()) {
+        setMirnError("Required");
+        isValid = false;
+      } else if (!/^\d{10,11}$/.test(mirn.trim())) {
+        setMirnError("MIRN must be 10–11 digits.");
+        isValid = false;
+      } else {
+        setMirnError("");
+      }
+    }
+
     return isValid;
   };
 
@@ -183,6 +214,55 @@ const LeadCaptureForm = () => {
   };
 
   // Save the current form data (example: using localStorage)
+  // const handleSave = () => {
+  //   if (!validateFields()) {
+  //     alert("Please correct the errors in the form.");
+  //     return;
+  //   }
+  //   const data = {
+  //     firstName,
+  //     lastName,
+  //     email,
+  //     phoneMobile,
+  //     billingAddress,
+  //     streetAddress,
+  //     suburb,
+  //     postCode,
+  //     stateName,
+  //     selectedProducts,
+  //     moveInDate: selectedDate,
+  //   };
+  //   localStorage.setItem("leadData", JSON.stringify(data));
+  //   alert("Data saved!");
+  // };
+
+  // Navigate to the signup form page
+  // const handleConnect = () => {
+  //   if (!validateFields()) {
+  //     alert("Please correct the errors in the form.");
+  //     return;
+  //   }
+  //   const data = {
+  //     firstName,
+  //     lastName,
+  //     email,
+  //     phoneMobile,
+  //     billingAddress,
+  //     streetAddress,
+  //     suburb,
+  //     postCode,
+  //     stateName,
+  //     selectedProducts,
+  //     moveInDate: selectedDate,
+  //     reaOfficeDetails,
+  //     referredAgentName,
+  //     reaSoftwareUsed,
+  //     // Add any additional fields here...
+  //   };
+  //   navigate("/signup-form", { state: data });
+  // };
+
+  // Save the current form data (example: using localStorage)
   const handleSave = () => {
     if (!validateFields()) {
       alert("Please correct the errors in the form.");
@@ -200,6 +280,8 @@ const LeadCaptureForm = () => {
       stateName,
       selectedProducts,
       moveInDate: selectedDate,
+      nmi, // <--- add
+      mirn, // <--- add
     };
     localStorage.setItem("leadData", JSON.stringify(data));
     alert("Data saved!");
@@ -226,7 +308,8 @@ const LeadCaptureForm = () => {
       reaOfficeDetails,
       referredAgentName,
       reaSoftwareUsed,
-      // Add any additional fields here...
+      nmi, // <--- add
+      mirn, // <--- add
     };
     navigate("/signup-form", { state: data });
   };
@@ -403,7 +486,7 @@ const LeadCaptureForm = () => {
               </div>
             </div>
 
-            <div className="form-field product-section">
+            {/* <div className="form-field product-section">
               <label>What products do you need?</label>
               <div className="product-buttons">
                 <button
@@ -430,7 +513,452 @@ const LeadCaptureForm = () => {
                 </button>
               </div>
               <div className="note">(Color red, not activated in phase 1)</div>
+            </div> */}
+            {/* <div className="form-field product-section">
+              <label>What products do you need?</label>
+              <div className="product-buttons">
+                <button
+                  className={`product-button ${
+                    selectedProducts.electricity ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("electricity")}
+                >
+                  Electricity
+                </button>
+                <button
+                  className={`product-button ${
+                    selectedProducts.gas ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("gas")}
+                >
+                  Gas
+                </button>
+                <button className="product-button water not-activated">
+                  Water
+                </button>
+                <button className="product-button broadband not-activated">
+                  Broadband
+                </button>
+              </div>
+              <div className="note">(Color red, not activated in phase 1)</div>
+            </div> */}
+            {/* <div className="form-field product-section">
+              <label>What products do you need?</label>
+              <div className="product-buttons-with-inputs">
+                <div className="product-block">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.electricity
+                        ? "selected"
+                        : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("electricity")}
+                  >
+                    Electricity
+                  </button>
+                  {selectedProducts.electricity && (
+                    <div className="inline-input">
+                      <label className="inline-label">
+                        NMI:{" "}
+                        <span className="text-gray-500">upto 11 digits</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={nmi}
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setNmi(numericValue);
+                          if (nmiError) setNmiError("");
+                        }}
+                        className="small-input"
+                      />
+                      {nmiError && (
+                        <span
+                          className="error-message"
+                          style={{ color: "red", fontSize: "0.75rem" }}
+                        >
+                          {nmiError}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="product-block">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.gas ? "selected" : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("gas")}
+                  >
+                    Gas
+                  </button>
+                  {selectedProducts.gas && (
+                    <div className="inline-input">
+                      <label className="inline-label">
+                        MIRN:{" "}
+                        <span className="text-gray-500">upto 11 digits</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={mirn}
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setMirn(numericValue);
+                          if (mirnError) setMirnError("");
+                        }}
+                        className="small-input"
+                      />
+                      {mirnError && (
+                        <span
+                          className="error-message"
+                          style={{ color: "red", fontSize: "0.75rem" }}
+                        >
+                          {mirnError}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <button className="product-button water not-activated">
+                  Water
+                </button>
+                <button className="product-button broadband not-activated">
+                  Broadband
+                </button>
+              </div>
+              <div className="note">(Color red, not activated in phase 1)</div>
+            </div> */}
+            {/* <div className=" form-field product-section">
+              <label>What products do you need?</label>
+              <div className="product-buttons-with-inputs">
+                <div className="product-block">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.electricity
+                        ? "selected"
+                        : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("electricity")}
+                  >
+                    Electricity
+                  </button>
+                  {selectedProducts.electricity && (
+                    <div className="inline-input">
+                      <label className="inline-label">
+                        NMI:{" "}
+                        <span className="text-gray-500">upto 11 digits</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={nmi}
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setNmi(numericValue);
+                          if (nmiError) setNmiError("");
+                        }}
+                        className="small-input"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="product-block">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.gas ? "selected" : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("gas")}
+                  >
+                    Gas
+                  </button>
+                  {selectedProducts.gas && (
+                    <div className="inline-input">
+                      <label className="inline-label">
+                        MIRN:{" "}
+                        <span className="text-gray-500">upto 11 digits</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={mirn}
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setMirn(numericValue);
+                          if (mirnError) setMirnError("");
+                        }}
+                        className="small-input"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="product-block">
+                  <button className="product-button water not-activated">
+                    Water
+                  </button>
+                </div>
+                <div className="product-block">
+                  <button className="product-button broadband not-activated">
+                    Broadband
+                  </button>
+                </div>
+              </div>
+
+              <div className="note">(Color red, not activated in phase 1)</div>
+            </div> */}
+
+            {/* <div className="form-field product-section">
+              <label>What products do you need?</label>
+              <div className="product-buttons">
+                <button
+                  className={`product-button ${
+                    selectedProducts.electricity ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("electricity")}
+                >
+                  Electricity
+                </button>
+                <button
+                  className={`product-button ${
+                    selectedProducts.gas ? "selected" : "default-yellow"
+                  }`}
+                  onClick={() => toggleProduct("gas")}
+                >
+                  Gas
+                </button>
+                <button className="product-button water not-activated">
+                  Water
+                </button>
+                <button className="product-button broadband not-activated">
+                  Broadband
+                </button>
+              </div>
+              <div className="note">(Color red, not activated in phase 1)</div>
+
+              {selectedProducts.electricity && (
+                <div className="product-input-block">
+                  <label className="product-input-label">
+                    NMI: <span className="text-gray-500">up to 11 digits</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={11}
+                    value={nmi}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/\D/g, "");
+                      setNmi(numericValue);
+                      if (nmiError) setNmiError("");
+                    }}
+                    className="product-input-field"
+                  />
+                  {nmiError && (
+                    <span
+                      className="error-message"
+                      style={{ color: "red", fontSize: "0.85rem" }}
+                    >
+                      {nmiError}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {selectedProducts.gas && (
+                <div className="product-input-block">
+                  <label className="product-input-label">
+                    MIRN: <span className="text-gray-500">up to 11 digits</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={11}
+                    value={mirn}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/\D/g, "");
+                      setMirn(numericValue);
+                      if (mirnError) setMirnError("");
+                    }}
+                    className="product-input-field"
+                  />
+                  {mirnError && (
+                    <span
+                      className="error-message"
+                      style={{ color: "red", fontSize: "0.85rem" }}
+                    >
+                      {mirnError}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div> */}
+            <div className="form-field product-section">
+              <label>What products do you need?</label>
+
+              <div className="product-row">
+                {/* Electricity Column */}
+                <div className="product-column">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.electricity
+                        ? "selected"
+                        : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("electricity")}
+                  >
+                    Electricity
+                  </button>
+
+                  {selectedProducts.electricity && (
+                    <div className="product-input-block">
+                      <label className="product-input-label">NMI:</label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={nmi}
+                        placeholder="upto 11 digits"
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setNmi(numericValue);
+                          if (nmiError) setNmiError("");
+                        }}
+                        className="product-input-field"
+                      />
+                      {nmiError && (
+                        <span
+                          className="error-message"
+                          style={{ color: "red", fontSize: "0.85rem" }}
+                        >
+                          {nmiError}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Gas Column */}
+                <div className="product-column">
+                  <button
+                    className={`product-button ${
+                      selectedProducts.gas ? "selected" : "default-yellow"
+                    }`}
+                    onClick={() => toggleProduct("gas")}
+                  >
+                    Gas
+                  </button>
+
+                  {selectedProducts.gas && (
+                    <div className="product-input-block">
+                      <label className="product-input-label">MIRN:</label>
+                      <input
+                        type="text"
+                        maxLength={11}
+                        value={mirn}
+                        placeholder="upto 11 digits"
+                        onChange={(e) => {
+                          const numericValue = e.target.value.replace(
+                            /\D/g,
+                            ""
+                          );
+                          setMirn(numericValue);
+                          if (mirnError) setMirnError("");
+                        }}
+                        className="product-input-field"
+                      />
+                      {mirnError && (
+                        <span
+                          className="error-message"
+                          style={{ color: "red", fontSize: "0.85rem" }}
+                        >
+                          {mirnError}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Water Column (Inactive) */}
+                <div className="product-column">
+                  <button className="product-button water not-activated">
+                    Water
+                  </button>
+                </div>
+
+                {/* Broadband Column (Inactive) */}
+                <div className="product-column">
+                  <button className="product-button broadband not-activated">
+                    Broadband
+                  </button>
+                </div>
+              </div>
+
+              <div className="note">(Color red, not activated in phase 1)</div>
             </div>
+
+            {/* NMI Field (if electricity is selected) */}
+            {/* {selectedProducts.electricity && (
+              <div className="form-field">
+                <label>NMI (up to 11 digits):</label>
+                <input
+                  type="text"
+                  placeholder="Enter NMI"
+                  maxLength={11}
+                  value={nmi}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const numericValue = e.target.value.replace(/\D/g, "");
+                    setNmi(numericValue);
+                    if (nmiError) setNmiError(""); // clear error on change
+                  }}
+                />
+                {nmiError && (
+                  <span className="error-message" style={{ color: "red" }}>
+                    {nmiError}
+                  </span>
+                )}
+              </div>
+            )} */}
+
+            {/* MIRN Field (if gas is selected) */}
+            {/* {selectedProducts.gas && (
+              <div className="form-field">
+                <label>MIRN (up to 11 digits):</label>
+                <input
+                  type="text"
+                  placeholder="Enter MIRN"
+                  maxLength={11}
+                  value={mirn}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const numericValue = e.target.value.replace(/\D/g, "");
+                    setMirn(numericValue);
+                    if (mirnError) setMirnError(""); // clear error on change
+                  }}
+                />
+                {mirnError && (
+                  <span className="error-message" style={{ color: "red" }}>
+                    {mirnError}
+                  </span>
+                )}
+              </div>
+            )} */}
 
             <div className="form-field">
               <label>When is your preferred move-in date?</label>

@@ -133,6 +133,7 @@ body {
 .product-button.selected {
   background-color: #0047ab;
   color: white;
+  margin: 0 !important;
 }
 .default-yellow {
   background-color: #fec600;
@@ -308,17 +309,206 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  margin: 10px;               /* Slight spacing from edges */
+  margin: 10px; /* Slight spacing from edges */
   padding: 8px 16px;
-  background-color: #ccc;     /* Adjust colors as needed */
+  background-color: #ccc; /* Adjust colors as needed */
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;            /* Adjust font size if you prefer 20px or 16px */
+  font-size: 16px; /* Adjust font size if you prefer 20px or 16px */
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .back-button:hover {
-  background-color: #bbb;     /* Slight hover effect */
+  background-color: #bbb; /* Slight hover effect */
+}
+
+/* .product-buttons-with-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.product-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.inline-input {
+  margin-top: 0.5rem;
+}
+
+.inline-label {
+  font-size: 0.75rem;
+  color: #555;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.small-input {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  width: 140px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+} */
+.product-buttons-with-inputs {
+  display: flex;
+  /* flex-wrap: wrap; */
+  gap: 50px;
+  align-items: flex-start !important;
+}
+
+.product-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.inline-input {
+  margin-top: 4px;
+  font-size: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.inline-label {
+  font-size: 12px !important;
+  color: #0047ab;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.small-input {
+  font-size: 13px !important;
+  padding: 2px 4px !important;
+  border: none;
+  border-bottom: 1px solid #1951a4;
+  background: transparent;
+  width: 100px;
+  text-align: center;
+}
+/* .product-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap; 
+}
+
+.product-input-block {
+  margin-top: 20px; 
+  display: flex;
+  flex-direction: column;
+  max-width: 300px; 
+}
+.product-input-label {
+  font-size: 18px;
+  color: #0047ab;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.product-input-field {
+  font-size: 18px;
+  border: none;
+  border-bottom: 1px solid #1951a4;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  padding: 4px 0;
+  margin-bottom: 5px;
+} */
+/* --- PRODUCTS SECTION LAYOUT --- */
+
+/* Container for the product buttons */
+.product-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap; /* If screen is narrow, they wrap onto next line */
+}
+
+/* Each NMI/MIRN block below the buttons */
+.product-input-block {
+  margin-top: 20px; /* Space between the button row and input field */
+  display: flex;
+  flex-direction: column;
+  max-width: 300px; /* Adjust as you like */
+}
+
+/* Label for NMI/MIRN fields */
+.product-input-label {
+  font-size: 18px;
+  color: #0047ab;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+/* The input field styling */
+.product-input-field {
+  font-size: 18px;
+  border: none;
+  border-bottom: 1px solid #1951a4;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  padding: 4px 0;
+  margin-bottom: 5px;
+}
+/* Container for all products in a single row */
+.product-row {
+  display: flex;
+  gap: 20px; /* Spacing between columns */
+  margin-top: 10px;
+}
+
+/* Each product button + optional input is one column */
+.product-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center button & input horizontally */
+}
+
+/* Common button styling (already in your CSS, just ensure widths) */
+.product-button {
+  width: 120px; /* Fixed width so inputs match */
+  text-align: center;
+  font-size: 20px;
+  padding: 8px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* The small block that wraps the label + input */
+.product-input-block {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  margin-top: 8px; /* Space between the button and input */
+}
+
+/* Label for NMI / MIRN */
+.product-input-label {
+  font-size: 12px !important;
+  color: #0047ab;
+  font-weight: 500;
+  margin-bottom: 0px !important;
+}
+
+/* Input field for NMI / MIRN */
+.product-input-field {
+  width: 120px; /* Match the button’s width */
+  text-align: center;
+  font-size: 12px !important;
+  border: none;
+  border-bottom: 1px solid #1951a4;
+  background: transparent;
+  outline: none;
+  padding: 0 !important;
+  margin-bottom: 4px;
 }
