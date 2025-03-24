@@ -554,8 +554,8 @@
  ***********************************/
 .lead-capture-form {
   font-family: "Poppins", sans-serif;
-  max-width: 1100px;
-  margin: 40px auto; /* Top/bottom margin for centering */
+  /* max-width: 1100px; */
+  /* margin: 40px auto; */
   padding: 30px;
   color: #333;
   background: white;
@@ -841,6 +841,39 @@
   cursor: pointer;
   width: 150px;
   font-weight: 600;
+}
+
+.save-button {
+  background-color: #0047ab;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 150px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.convert-button {
+  background-color: #fec600;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 150px;
+  text-align: center;
+  font-weight: 600;
+}
+
+
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between buttons */
 }
 
 .agent-dropdown {
