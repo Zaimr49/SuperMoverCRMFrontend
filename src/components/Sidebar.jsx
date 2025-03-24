@@ -1,91 +1,46 @@
 import { NavLink } from "react-router-dom";
 import { FaChartLine, FaUserCog } from "react-icons/fa";
 import { FiTrendingUp, FiUsers, FiLogIn } from "react-icons/fi";
+import { useNavigate, useLocation } from "react-router-dom";
 import superMoverLogo from "../assets/loginSuperMoverLogo.png";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { path: "/dashboard", icon: <FaChartLine className="mr-3" />, label: "Lead Dashboard",disable: false },
+    { path: "/lead-status", icon: <FiTrendingUp className="mr-3" />, label: "Lead Status Management",disable: true },
+    { path: "/sale-signup", icon: <FiLogIn className="mr-3" />, label: "Sale Sign Up",disable: true },
+    { path: "/sales-and-reporting", icon: <FiUsers className="mr-3" />, label: "Sales & Reporting",disable: false },
+    { path: "/user-access-settings", icon: <FaUserCog className="mr-3" />, label: "User Access Settings", disable: false },
+  ];
+
   return (
     <aside className="w-full md:w-72 bg-white shadow-md p-5">
       <div className="flex justify-between items-center mb-6">
-        <img src={superMoverLogo} alt="Super Mover Logo" className="h-28 w-auto" />
+        <img
+          src={superMoverLogo}
+          onClick={() => navigate('/')}
+          alt="Super Mover Logo"
+          className="h-28 w-auto cursor-pointer"
+        />
       </div>
       <nav>
         <ul className="space-y-2">
-          <li>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                `flex items-center p-3 text-sm rounded-lg ${
-                  isActive
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FaChartLine className="mr-3" />
-              Lead Dashboard
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `flex items-center p-3 text-sm rounded-lg ${
-                  isActive
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FiTrendingUp className="mr-3" />
-              Lead Status Management
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/#"
-              className={({ isActive }) =>
-                `flex items-center p-3 text-sm rounded-lg ${
-                  isActive
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FiLogIn className="mr-3" />
-              Sale Sign Up
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/sales-dashboard"
-              className={({ isActive }) =>
-                `flex items-center p-3 text-sm rounded-lg ${
-                  isActive
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FiUsers className="mr-3" />
-              Sales & Reporting
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/user-access-settings"
-              className={({ isActive }) =>
-                `flex items-center p-3 text-sm rounded-lg ${
-                  isActive
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
-                }`
-              }
-            >
-              <FaUserCog className="mr-3" />
-              User Access Settings
-            </NavLink>
-          </li>
+          {menuItems.map((item) => (
+            <li key={item.path}>
+              <a
+                href={item.disable ? '#' : item.path}
+                className={`flex items-center p-3 text-sm rounded-lg font-semibold ${
+                  location.pathname === item.path ? "bg-blue-600 text-white" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {item.icon}
+                {item.label}
+              </a>
+            </li>
+          ))}
         </ul>
       </nav>
     </aside>

@@ -1,8 +1,10 @@
 import React, { useState, useRef, createRef, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import classNames from "classnames";
-import Sidebar from "../components/Sidebar"; // Import your Sidebar component
+import Sidebar from "../components/Sidebar"; // Import Sidebar
+import { useNavigate } from "react-router-dom";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from "../utils/alerts";
 
 /** Utility to combine Tailwind classes. */
 function cn(...classes) {
@@ -16,7 +18,8 @@ function Button({ onClick, disabled, className, children, ...props }) {
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={cn(
-        "px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors text-[16px]",
+        " px-4 py-2 rounded font-semibold focus:outline-none focus:ring-2 " +
+          "focus:ring-offset-2 transition-colors text-[16px]",
         className
       )}
       {...props}
@@ -27,10 +30,7 @@ function Button({ onClick, disabled, className, children, ...props }) {
 }
 
 export default function SignUpForm() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Steps for the multi-step form
+  // Steps array
   const [steps, setSteps] = useState([
     { id: 1, title: "Sale Type", isOpen: true },
     { id: 2, title: "Customer Details", isOpen: false },
@@ -46,10 +46,17 @@ export default function SignUpForm() {
     { id: 0, title: "Confirmation & Submission", isOpen: false, isFinal: true },
   ]);
 
-  // Calendar state (for Step 6)
+  // State for the date picker (Step 6)
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const stepRefs = useRef({}); // We'll fill in refs for each step
+
+  const location = useLocation(); // ✅ Correct placement
+  const responseData = location.state?.lead;
+  const navigate = useNavigate();
+
+
   const monthNames = [
     "January",
     "February",
@@ -65,16 +72,16 @@ export default function SignUpForm() {
     "December",
   ];
 
-  const stepRefs = useRef({});
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Form data state for all steps
+  // Include fields in formData for All Steps
   const [formData, setFormData] = useState({
-    // Step 1:
-    connectionType: "",
-    products: [],
-    customerType: "",
-    // Step 2:
+    // Step 1 fields:
+    connectionType: "", // "moveIn" or "transfer"
+    products: [], // e.g. ["electricity","gas","broadband"]
+    customerType: "", // "residential" or "business"
+
+    // Step 2 fields:
     title: "",
     firstName: "",
     lastName: "",
@@ -84,84 +91,167 @@ export default function SignUpForm() {
     isBillingSameAsPhysical: true,
     billingAddress: "",
     howDidYouHear: "",
-    // Step 3:
-    isOwner: null,
-    hasSolar: null,
-    // Step 4:
+
+    // Step 3 fields:
+    isOwner: null, // true or false
+    hasSolar: null, // true or false
+
+    // Step 4 fields:
     dob: "",
-    verificationMethod: "",
+    verificationMethod: "", // e.g. "Driver's License", "Passport", "Medicare"
     idNumber: "",
     idExpiry: "",
     homePhone: "",
     mobilePhone: "",
     confirmEmail: "",
-    // Step 5:
-    wantsSecondaryContact: null,
+
+    // Step 5 fields:
+    wantsSecondaryContact: null, // true or false
     secondaryTitle: "",
     secondaryFirstName: "",
     secondaryLastName: "",
     secondaryMobile: "",
     secondaryHomePhone: "",
     secondaryEmail: "",
-    // Step 6:
+
+    // Step 6 fields:
     moveInDate: null,
-    hasBeenDisconnected12Months: null,
-    hasBuildingElectricalWorks: null,
-    hasClearMeterAccess: null,
-    // Step 7:
-    lifeSupport: null,
-    isConcessionHolder: null,
+    hasBeenDisconnected12Months: null, // true / false
+    hasBuildingElectricalWorks: null, // true / false
+    hasClearMeterAccess: null, // true / false
+
+    // Step 7 fields:
+    lifeSupport: null, // true/false
+    isConcessionHolder: null, // true/false
     concessionType: "",
     concessionCardNumber: "",
     concessionCardStartDate: "",
     concessionCardExpiryDate: "",
+
     // Step 8:
-    medicalCoolingConcession: null,
-    concessionerDeclarationProvided: null,
+    medicalCoolingConcession: null, // true/false
+    concessionerDeclarationProvided: null, // true/false
+
     // Step 9:
-    consentElectronicBills: null,
-    allCommunicationSameMethod: null,
-    usePrimaryEmailForAll: null,
-    isPostalAddressCorrect: null,
+    consentElectronicBills: null, // true/false
+    allCommunicationSameMethod: null, // true/false
+    usePrimaryEmailForAll: null, // true/false
+    isPostalAddressCorrect: null, // true/false
+
     // Step 10:
-    monthlyBillsOk: null,
-    promotionalContactConsent: null,
+    monthlyBillsOk: null, // yes/no
+    promotionalContactConsent: null, // yes/no
+
     // Step 11:
-    hasReviewedMarketOfferSummary: null,
-    hasReviewedEICScript: null,
+    hasReviewedMarketOfferSummary: null, // or you can store “true”/“false” if they clicked
+    hasReviewedEICScript: null, // or similarly store “true”/“false”
   });
 
-  // Use effect to receive data passed from previous page (if any)
+  // Fetch leads from API
   useEffect(() => {
-    if (location.state) {
-      // Map the incoming data to your formData.
-      // For example, if the previous page passed firstName, lastName, email, phoneMobile, billingAddress, selectedProducts, and moveInDate:
-      setFormData((prev) => ({
-        ...prev,
-        firstName: location.state.firstName || prev.firstName,
-        lastName: location.state.lastName || prev.lastName,
-        email: location.state.email || prev.email,
-        // Map phoneMobile to bestContactNumber
-        bestContactNumber: location.state.phoneMobile || prev.bestContactNumber,
-        // Use the billing address from the previous page as the physicalAddress and billingAddress
-        physicalAddress: location.state.billingAddress || prev.physicalAddress,
-        billingAddress: location.state.billingAddress || prev.billingAddress,
-        // Convert moveInDate (if provided) to a Date object
-        moveInDate: location.state.moveInDate
-          ? new Date(location.state.moveInDate)
-          : prev.moveInDate,
-        // If selectedProducts was sent as an object (e.g. { electricity: true, gas: false, ... }),
-        // convert it to an array of product names for which the value is true:
-        products: location.state.selectedProducts
-          ? Object.entries(location.state.selectedProducts)
-              .filter(([key, value]) => value)
-              .map(([key]) => key)
-          : prev.products,
-      }));
-    }
-  }, [location.state]);
+    if (responseData) {
+      console.log(responseData)
 
-  // Toggle a step open/close
+      const {
+        tenant: { firstName, secondName, email, mobile } = {},
+        address: { text: physicalAddress, streetNumber, streetName, locality, postCode, state } = {},
+        services = {},
+        leaseStartDate,
+        referringAgent: { name: agentName } = {},
+        referringAgency: { name: agencyName } = {},
+      } = responseData;
+
+      // Map lead data to formData fields
+    setFormData((prev) => ({
+      ...prev,
+      // Step 1: Sale Type
+      products: Object.keys(services).filter((service) => services[service]), // e.g., ["electricity", "gas"]
+      connectionType: leaseStartDate ? "moveIn" : prev.connectionType, // Assume "moveIn" if leaseStartDate exists
+      customerType: prev.customerType || "residential", // Default to residential if not specified
+
+      // Step 2: Customer Details
+      firstName: firstName || prev.firstName,
+      lastName: secondName || prev.lastName,
+      email: email || prev.email,
+      bestContactNumber: mobile || prev.bestContactNumber,
+      physicalAddress: physicalAddress || `${streetNumber || ""} ${streetName || ""}, ${locality || ""}, ${state || ""} ${postCode || ""}`.trim() || prev.physicalAddress,
+      isBillingSameAsPhysical: true, // Default assumption; adjust if needed
+      billingAddress: physicalAddress || prev.billingAddress,
+      howDidYouHear: agentName || agencyName ? "REA Office" : prev.howDidYouHear, // Infer from agent/agency
+
+      // Step 3: Account Holder Details
+      isOwner: prev.isOwner, // Not in lead data; keep previous or null
+      hasSolar: prev.hasSolar, // Not in lead data; keep previous or null
+
+      // Step 4: Primary Account Holder Verification
+      dob: prev.dob, // Not in lead data
+      verificationMethod: prev.verificationMethod,
+      idNumber: prev.idNumber,
+      idExpiry: prev.idExpiry,
+      homePhone: prev.homePhone,
+      mobilePhone: mobile || prev.mobilePhone,
+      confirmEmail: email || prev.confirmEmail,
+
+      // Step 5: Secondary Contact (Optional)
+      wantsSecondaryContact: prev.wantsSecondaryContact, // Not in lead data
+      secondaryTitle: prev.secondaryTitle,
+      secondaryFirstName: prev.secondaryFirstName,
+      secondaryLastName: prev.secondaryLastName,
+      secondaryMobile: prev.secondaryMobile,
+      secondaryHomePhone: prev.secondaryHomePhone,
+      secondaryEmail: prev.secondaryEmail,
+
+      // Step 6: Move-In Details
+      moveInDate: leaseStartDate ? new Date(leaseStartDate) : prev.moveInDate,
+      hasBeenDisconnected12Months: prev.hasBeenDisconnected12Months,
+      hasBuildingElectricalWorks: prev.hasBuildingElectricalWorks,
+      hasClearMeterAccess: prev.hasClearMeterAccess,
+
+      // Step 7: Life Support & Concessions
+      lifeSupport: prev.lifeSupport,
+      isConcessionHolder: prev.isConcessionHolder,
+      concessionType: prev.concessionType,
+      concessionCardNumber: prev.concessionCardNumber,
+      concessionCardStartDate: prev.concessionCardStartDate,
+      concessionCardExpiryDate: prev.concessionCardExpiryDate,
+
+      // Step 8: Medical Cooling Concession & Consent
+      medicalCoolingConcession: prev.medicalCoolingConcession,
+      concessionerDeclarationProvided: prev.concessionerDeclarationProvided,
+
+      // Step 9: Communication Preferences
+      consentElectronicBills: prev.consentElectronicBills,
+      allCommunicationSameMethod: prev.allCommunicationSameMethod,
+      usePrimaryEmailForAll: prev.usePrimaryEmailForAll,
+      isPostalAddressCorrect: prev.isPostalAddressCorrect,
+
+      // Step 10: Billing & Promotional Contact
+      monthlyBillsOk: prev.monthlyBillsOk,
+      promotionalContactConsent: prev.promotionalContactConsent,
+
+      // Step 11: Contract Summary & EIC Script
+      hasReviewedMarketOfferSummary: prev.hasReviewedMarketOfferSummary,
+      hasReviewedEICScript: prev.hasReviewedEICScript,
+    }));
+
+    // Set initial date picker state
+    if (leaseStartDate) {
+      setSelectedDate(new Date(leaseStartDate));
+      setCurrentDate(new Date(leaseStartDate)); // Align calendar with move-in date
+    }
+    
+
+      setSteps((steps) =>
+        steps.map((step) => ({
+          ...step,
+          isOpen: true,
+        }))
+      );
+      
+    }
+  }, [responseData]);
+
+  // Toggle open/close for each step
   const toggleStep = (stepId) => {
     setSteps((prevSteps) =>
       prevSteps.map((step) => ({
@@ -171,11 +261,12 @@ export default function SignUpForm() {
     );
   };
 
-  // Step 1: Handlers
+  // Step 1: Single-select for connection type
   const handleConnectionTypeSelect = (type) => {
     setFormData((prev) => ({ ...prev, connectionType: type }));
   };
 
+  // Step 1: Multi-select for products
   const handleProductSelect = (product) => {
     setFormData((prev) => {
       const products = prev.products.includes(product)
@@ -185,6 +276,7 @@ export default function SignUpForm() {
     });
   };
 
+  // Step 1: Single-select for customer type
   const handleCustomerTypeSelect = (type) => {
     setFormData((prev) => ({ ...prev, customerType: type }));
   };
@@ -195,26 +287,29 @@ export default function SignUpForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Next step handler
+  // Move to next step
   function handleNextStep() {
     const nextStepId = currentStep + 1;
     const nextStep = steps.find((step) => step.id === nextStepId);
+
     if (nextStep) {
       setSteps((prevSteps) =>
         prevSteps.map((s) => ({
           ...s,
-          isOpen: s.id === nextStepId,
+          isOpen: s.id === nextStepId, // open next step
         }))
       );
       setCurrentStep(nextStepId);
+
+      // Scroll *after* state updates (use a small timeout or useEffect)
       setTimeout(() => {
         stepRefs.current[nextStepId]?.current?.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "start", // or 'center'
         });
       }, 0);
     } else {
-      // If no next step, open the final step (id=0)
+      // If no next step, open final step (id=0)
       setSteps((prevSteps) =>
         prevSteps.map((s) => ({
           ...s,
@@ -222,6 +317,7 @@ export default function SignUpForm() {
         }))
       );
       setCurrentStep(0);
+
       setTimeout(() => {
         stepRefs.current[0]?.current?.scrollIntoView({
           behavior: "smooth",
@@ -231,7 +327,9 @@ export default function SignUpForm() {
     }
   }
 
-  // Toggle button style helper
+  /**
+   * Update button/toggle classes to use #1951A4
+   */
   const getToggleButtonClasses = (isSelected, isDisabled) => {
     if (isDisabled) {
       return "bg-red-400 text-white cursor-not-allowed text-[16px] font-normal";
@@ -241,7 +339,7 @@ export default function SignUpForm() {
       : "bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal";
   };
 
-  // ---------- Calendar functions for Step 6 ----------
+  // --------- Step 6: Calendar logic ----------
   function changeMonth(offset) {
     const newDate = new Date(
       currentDate.getFullYear(),
@@ -260,11 +358,13 @@ export default function SignUpForm() {
   function renderCalendarDays() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
+
     const firstDayOfMonth = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+
     const slots = [];
 
-    // Empty slots before the 1st day of the month
+    // Fill in empty days before 1st
     for (let i = 0; i < firstDayOfMonth; i++) {
       slots.push(
         <div key={`empty-${i}`} className="text-center text-sm text-gray-300" />
@@ -276,6 +376,7 @@ export default function SignUpForm() {
       const thisDate = new Date(year, month, day);
       const isSelected =
         selectedDate && thisDate.toDateString() === selectedDate.toDateString();
+
       slots.push(
         <div
           key={day}
@@ -289,43 +390,120 @@ export default function SignUpForm() {
         </div>
       );
     }
+
     return slots;
   }
-  // ---------------------------------------------------
+  // --------------------------------------------
+
+  const handleSave = async () => {
+    try {
+      const transformedData =        {
+          tenant: {
+            firstName: formData.firstName,
+            secondName: formData.lastName,
+            email: formData.email,
+            mobile: formData.bestContactNumber,
+          },
+          address: {
+            text: formData.physicalAddress,
+            unit: "",
+            streetNumber: "",
+            streetName: "",
+            locality: "",
+            postCode: 2000,
+            state: "",
+            city: "",
+            country: "",
+          },
+          referringAgent: {
+            name: "",
+            email: "",
+            partnerCode: "",
+          },
+          referringAgency: {
+            name: "",
+            email: "",
+            partnerCode: "",
+          },
+          services: {
+            gas: formData.products.includes("gas"),
+            electricity: formData.products.includes("electricity"),
+            internet: formData.products.includes("broadband"),
+            telephone: formData.products.includes("telephone"),
+            payTV: formData.products.includes("payTV"),
+            cleaning: formData.products.includes("cleaning"),
+            removalist: formData.products.includes("removalist"),
+            movingBoxes: formData.products.includes("movingBoxes"),
+            vehicleHire: formData.products.includes("vehicleHire"),
+            water: formData.products.includes("water"),
+          },
+          submitted: new Date().toISOString(),
+          leaseStartDate: formData.moveInDate || new Date().toISOString().split("T")[0],
+          renewal: false,
+          extra: {
+            connectionType: formData.connectionType,
+            customerType: formData.customerType,
+            isOwner: formData.isOwner,
+            hasSolar: formData.hasSolar,
+            dob: formData.dob,
+            verificationMethod: formData.verificationMethod,
+            idNumber: formData.idNumber,
+            idExpiry: formData.idExpiry,
+            homePhone: formData.homePhone,
+            mobilePhone: formData.mobilePhone,
+            sale: formData.sale || true,
+          },
+        };
+  
+      const API_URL = "http://localhost:8000/api/crm/flk/save-lead/"; // Ensure this is correct
+  
+      console.log("Sending data to API:", JSON.stringify(transformedData, null, 2));
+  
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transformedData),
+      });
+  
+      const responseData = await response.json(); // Parse response
+  
+      if (!response.ok) {
+        throw new Error(`Failed to submit data: ${JSON.stringify(responseData)}`);
+      }
+  
+      console.log("Data submitted successfully!", responseData);
+      showSuccessAlert("Leads saved successfully !")
+      navigate("/sales-and-reporting")
+    } catch (error) {
+      console.error("Submission failed:", error.message);
+      showErrorAlert("Operation not succeed !")
+      alert(`Error: ${error.message}`); // Display error alert
+    }
+  };
+  
+  
+  
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white">
-      {/* Sidebar */}
-      <Sidebar
-        style={{ width: "25%" }}
-        className="w-1/4 h-screen fixed md:relative"
-      />
 
-      {/* Main Content */}
-      <main
-        className="flex-1 p-6 ml-1/4 overflow-y-auto h-screen"
-        style={{ width: "75%" }}
-      >
-        <div className="flex justify-end mb-4">
-          <Button
-            onClick={() => navigate("/lead-capture-form")}
-            className="bg-[#ccc] hover:bg-[#bbb] text-white focus:outline-none focus:ring-0"
-          >
-            Back
-          </Button>
-        </div>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar style={{width: "25%"}} className="w-1/4 h-screen fixed md:relative" /> 
+      <main className="flex-1 ml-1/4 overflow-y-auto h-screen" style={{width: "75%"}}>
         <div className="px-2 py-6 bg-white text-left text-gray-800">
+          <div className="text-right mb-5">
+            <button className="convert-button" onClick={() => navigate(-1)} style={{marginLeft: "auto", padding: "8px", width: "100px"}}  >Back</button>
+          </div>
           {steps.map((step) => {
-            // Create refs for each step if not already done
+            // If we haven't created a ref for this step yet, do it now
             if (!stepRefs.current[step.id]) {
               stepRefs.current[step.id] = createRef();
             }
+
             return (
-              <div
-                key={step.id}
-                ref={stepRefs.current[step.id]}
-                className="mb-6"
-              >
+              <div key={step.id} ref={stepRefs.current[step.id]} className="mb-6">
                 {/* Step heading */}
                 <button
                   onClick={() => toggleStep(step.id)}
@@ -344,7 +522,10 @@ export default function SignUpForm() {
                     )}
                   />
                 </button>
+
+                {/* Thinner yellow divider */}
                 <div className="border-t border-yellow-400 mt-2 mb-4" />
+
                 {step.isOpen && (
                   <div className="pl-2">
                     {/* STEP 1 CONTENT */}
@@ -354,15 +535,15 @@ export default function SignUpForm() {
                           Let&apos;s start with some basic details to get you
                           connected!
                         </p>
+
+                        {/* Move In / Transfer */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Is this a new connection or a transfer?
                           </p>
                           <div className="flex flex-wrap gap-2">
                             <Button
-                              onClick={() =>
-                                handleConnectionTypeSelect("moveIn")
-                              }
+                              onClick={() => handleConnectionTypeSelect("moveIn")}
                               className={getToggleButtonClasses(
                                 formData.connectionType === "moveIn",
                                 false
@@ -371,9 +552,7 @@ export default function SignUpForm() {
                               Move In
                             </Button>
                             <Button
-                              onClick={() =>
-                                handleConnectionTypeSelect("transfer")
-                              }
+                              onClick={() => handleConnectionTypeSelect("transfer")}
                               className={getToggleButtonClasses(
                                 formData.connectionType === "transfer",
                                 false
@@ -383,6 +562,8 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
+
+                        {/* Products */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             What products do you need?
@@ -429,6 +610,8 @@ export default function SignUpForm() {
                             (Color red, not activated in phase 1)
                           </p>
                         </div>
+
+                        {/* Residential / Business */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Are you signing up as a:
@@ -446,9 +629,7 @@ export default function SignUpForm() {
                               Residential Customer
                             </Button>
                             <Button
-                              onClick={() =>
-                                handleCustomerTypeSelect("business")
-                              }
+                              onClick={() => handleCustomerTypeSelect("business")}
                               className={getToggleButtonClasses(
                                 formData.customerType === "business",
                                 false
@@ -458,12 +639,14 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
+
+                        {/* Next Step (centered) */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -475,32 +658,31 @@ export default function SignUpForm() {
                         <p className="mb-4 text-[20px]">
                           We&apos;ll need some details to create your account.
                         </p>
+
+                        {/* Title */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             What&apos;s your title? (Optional)
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {["Mr", "Mrs", "Ms", "Miss", "Dr", "Mx"].map(
-                              (t) => (
-                                <Button
-                                  key={t}
-                                  onClick={() =>
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      title: t,
-                                    }))
-                                  }
-                                  className={getToggleButtonClasses(
-                                    formData.title === t,
-                                    false
-                                  )}
-                                >
-                                  {t}
-                                </Button>
-                              )
-                            )}
+                            {["Mr", "Mrs", "Ms", "Miss", "Dr", "Mx"].map((t) => (
+                              <Button
+                                key={t}
+                                onClick={() =>
+                                  setFormData((prev) => ({ ...prev, title: t }))
+                                }
+                                className={getToggleButtonClasses(
+                                  formData.title === t,
+                                  false
+                                )}
+                              >
+                                {t}
+                              </Button>
+                            ))}
                           </div>
                         </div>
+
+                        {/* First Name */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your first name?
@@ -514,6 +696,8 @@ export default function SignUpForm() {
                             placeholder="Jane"
                           />
                         </div>
+
+                        {/* Last Name */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             And your last name?
@@ -527,6 +711,8 @@ export default function SignUpForm() {
                             placeholder="Marry"
                           />
                         </div>
+
+                        {/* Best Contact Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Best contact number?
@@ -540,6 +726,8 @@ export default function SignUpForm() {
                             placeholder="0432 111 111"
                           />
                         </div>
+
+                        {/* Email */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Your email address?
@@ -553,6 +741,8 @@ export default function SignUpForm() {
                             placeholder="Jane@gmail.com.au"
                           />
                         </div>
+
+                        {/* Physical Address */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your physical address?
@@ -566,6 +756,8 @@ export default function SignUpForm() {
                             placeholder="49 High Street Road, Ashwood VIC 3147"
                           />
                         </div>
+
+                        {/* Billing Address same as Physical? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Is your billing address the same as your physical
@@ -602,6 +794,8 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
+
+                        {/* Billing Address (only if "No") */}
                         {!formData.isBillingSameAsPhysical && (
                           <div className="mb-4">
                             <label className="block mb-1 text-[16px] font-semibold">
@@ -617,6 +811,8 @@ export default function SignUpForm() {
                             />
                           </div>
                         )}
+
+                        {/* How did you hear about us? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             How did you hear about us?
@@ -647,12 +843,13 @@ export default function SignUpForm() {
                             ))}
                           </div>
                         </div>
+
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -664,6 +861,8 @@ export default function SignUpForm() {
                         <p className="mb-4 text-[20px]">
                           A few more details to set up your account.
                         </p>
+
+                        {/* Are you the owner of this property? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Are you the owner of this property?
@@ -671,10 +870,7 @@ export default function SignUpForm() {
                           <div className="flex flex-wrap gap-2">
                             <Button
                               onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  isOwner: true,
-                                }))
+                                setFormData((prev) => ({ ...prev, isOwner: true }))
                               }
                               className={getToggleButtonClasses(
                                 formData.isOwner === true,
@@ -685,10 +881,7 @@ export default function SignUpForm() {
                             </Button>
                             <Button
                               onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  isOwner: false,
-                                }))
+                                setFormData((prev) => ({ ...prev, isOwner: false }))
                               }
                               className={getToggleButtonClasses(
                                 formData.isOwner === false,
@@ -699,6 +892,8 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
+
+                        {/* Does property have solar panels? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Does the property have solar panels installed?
@@ -706,10 +901,7 @@ export default function SignUpForm() {
                           <div className="flex flex-wrap gap-2">
                             <Button
                               onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  hasSolar: true,
-                                }))
+                                setFormData((prev) => ({ ...prev, hasSolar: true }))
                               }
                               className={getToggleButtonClasses(
                                 formData.hasSolar === true,
@@ -734,12 +926,13 @@ export default function SignUpForm() {
                             </Button>
                           </div>
                         </div>
+
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -752,6 +945,8 @@ export default function SignUpForm() {
                           We need to verify your identity to set up your account
                           securely.
                         </p>
+
+                        {/* Date of Birth */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             What&apos;s your date of birth?
@@ -761,10 +956,14 @@ export default function SignUpForm() {
                             name="dob"
                             value={formData.dob}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="DD/MM/YYYY"
                           />
                         </div>
+
+                        {/* Identity Verification Method */}
                         <div className="mb-4">
                           <label className="block mb-2 text-[16px] font-semibold">
                             How would you like to verify your identity?
@@ -791,6 +990,8 @@ export default function SignUpForm() {
                             )}
                           </div>
                         </div>
+
+                        {/* ID Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Enter your selected ID number:
@@ -800,10 +1001,14 @@ export default function SignUpForm() {
                             name="idNumber"
                             value={formData.idNumber}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="ID number"
                           />
                         </div>
+
+                        {/* Expiry date */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Expiry date of your ID?
@@ -813,10 +1018,14 @@ export default function SignUpForm() {
                             name="idExpiry"
                             value={formData.idExpiry}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="MM/YYYY"
                           />
                         </div>
+
+                        {/* Home Phone (Optional) */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Home phone number? (Optional)
@@ -826,10 +1035,14 @@ export default function SignUpForm() {
                             name="homePhone"
                             value={formData.homePhone}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="(07) 1234 5678"
                           />
                         </div>
+
+                        {/* Mobile Number */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Mobile number?
@@ -839,10 +1052,14 @@ export default function SignUpForm() {
                             name="mobilePhone"
                             value={formData.mobilePhone}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="0432 123 456"
                           />
                         </div>
+
+                        {/* Confirm Email */}
                         <div className="mb-4">
                           <label className="block mb-1 text-[16px] font-semibold">
                             Confirm your email address:
@@ -852,16 +1069,19 @@ export default function SignUpForm() {
                             name="confirmEmail"
                             value={formData.confirmEmail}
                             onChange={handleInputChange}
-                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                            className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                    text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                    placeholder-gray-400 outline-none"
                             placeholder="Repeat your email"
                           />
                         </div>
+
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -903,11 +1123,14 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
                         {formData.wantsSecondaryContact && (
                           <>
                             <p className="mb-4 text-[20px]">
                               Please provide the secondary contact details.
                             </p>
+
+                            {/* Title */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 What&apos;s their title?
@@ -934,6 +1157,8 @@ export default function SignUpForm() {
                                 )}
                               </div>
                             </div>
+
+                            {/* First Name */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 First name?
@@ -943,10 +1168,14 @@ export default function SignUpForm() {
                                 name="secondaryFirstName"
                                 value={formData.secondaryFirstName}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                        text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                        placeholder-gray-400 outline-none"
                                 placeholder="Jane"
                               />
                             </div>
+
+                            {/* Last Name */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Last name?
@@ -956,10 +1185,14 @@ export default function SignUpForm() {
                                 name="secondaryLastName"
                                 value={formData.secondaryLastName}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                        text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                        placeholder-gray-400 outline-none"
                                 placeholder="Marry"
                               />
                             </div>
+
+                            {/* Secondary Mobile Number */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary mobile number?
@@ -969,10 +1202,14 @@ export default function SignUpForm() {
                                 name="secondaryMobile"
                                 value={formData.secondaryMobile}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                        text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                        placeholder-gray-400 outline-none"
                                 placeholder="0432 111 111"
                               />
                             </div>
+
+                            {/* Secondary Home Phone (Optional) */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary home phone number? (Optional)
@@ -982,10 +1219,14 @@ export default function SignUpForm() {
                                 name="secondaryHomePhone"
                                 value={formData.secondaryHomePhone}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                        text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                        placeholder-gray-400 outline-none"
                                 placeholder="(07) 7654 3210"
                               />
                             </div>
+
+                            {/* Secondary Email Address */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Secondary email address?
@@ -995,54 +1236,63 @@ export default function SignUpForm() {
                                 name="secondaryEmail"
                                 value={formData.secondaryEmail}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                                        text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                                        placeholder-gray-400 outline-none"
                                 placeholder="Jane@gmail.com.au"
                               />
                             </div>
                           </>
                         )}
+
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
                     )}
 
-                    {/* STEP 6 CONTENT: Move-In Details */}
+                    {/* STEP 6 CONTENT: Move-In Details (with Tailwind date picker) */}
                     {step.id === 6 && (
                       <>
                         <p className="mb-4 text-[20px]">
                           Let&apos;s get your connection sorted. A few quick
                           questions to ensure a smooth process!
                         </p>
+
+                        {/* 1) Preferred Move-In Date */}
                         <div className="mb-6">
                           <label className="block text-[16px] font-semibold mb-2">
                             When is your preferred move-in date?
                           </label>
                           <div className="relative">
+                            {/* 'Date picker input' */}
                             <div
-                              className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer w-72"
+                              className="bg-[#0047ab] text-white px-4 py-2 rounded flex items-center justify-between cursor-pointer"
                               onClick={() => setShowCalendar(!showCalendar)}
                             >
                               <span>
                                 {formData.moveInDate
-                                  ? new Date(
-                                      formData.moveInDate
-                                    ).toLocaleDateString("en-US", {
-                                      day: "numeric",
-                                      month: "long",
-                                      year: "numeric",
-                                    })
+                                  ? formData.moveInDate.toLocaleDateString(
+                                      "en-US",
+                                      {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                      }
+                                    )
                                   : "Select a date"}
                               </span>
                               <Calendar size={20} color="#fff" />
                             </div>
+
                             {showCalendar && (
-                              <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 shadow-lg">
+                              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-lg">
+                                {/* Calendar header */}
                                 <div className="flex items-center justify-between p-2 border-b border-gray-100 bg-gray-50">
                                   <ChevronLeft
                                     size={16}
@@ -1061,29 +1311,27 @@ export default function SignUpForm() {
                                     onClick={() => changeMonth(1)}
                                   />
                                 </div>
+
+                                {/* Weekdays + Days Grid */}
                                 <div className="grid grid-cols-7 gap-2 p-2 text-center">
-                                  {[
-                                    "Su",
-                                    "Mo",
-                                    "Tu",
-                                    "We",
-                                    "Th",
-                                    "Fr",
-                                    "Sa",
-                                  ].map((w) => (
-                                    <div
-                                      key={w}
-                                      className="text-sm font-bold text-gray-500"
-                                    >
-                                      {w}
-                                    </div>
-                                  ))}
+                                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(
+                                    (w) => (
+                                      <div
+                                        key={w}
+                                        className="text-sm font-bold text-gray-500"
+                                      >
+                                        {w}
+                                      </div>
+                                    )
+                                  )}
                                   {renderCalendarDays()}
                                 </div>
                               </div>
                             )}
                           </div>
                         </div>
+
+                        {/* 2) Disconnected > 12 months? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Has the electricity supply at the property been
@@ -1119,21 +1367,23 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
+
                           {formData.hasBeenDisconnected12Months && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
                                 A Certificate of Compliance (COC) for electrical
-                                work is required, and the connection may be
-                                delayed.
+                                work is required, and the connection may be delayed.
                               </p>
                               <p>
                                 Please obtain the COC and email it to{" "}
-                                <strong>info@supermovers.com.au</strong> as soon
-                                as possible.
+                                <strong>info@supermovers.com.au</strong> as soon as
+                                possible.
                               </p>
                             </div>
                           )}
                         </div>
+
+                        {/* 3) Building / Electrical Works? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
                             Have there been any building or electrical works
@@ -1170,6 +1420,7 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
+
                           {formData.hasBuildingElectricalWorks && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
@@ -1180,10 +1431,11 @@ export default function SignUpForm() {
                             </div>
                           )}
                         </div>
+
+                        {/* 4) Clear & Safe Access? */}
                         <div className="mb-6 text-[20px]">
                           <p className="font-normal mb-2">
-                            Is there clear and safe access to the electricity
-                            meter?
+                            Is there clear and safe access to the electricity meter?
                           </p>
                           <div className="flex gap-2">
                             <Button
@@ -1215,23 +1467,24 @@ export default function SignUpForm() {
                               No
                             </Button>
                           </div>
+
                           {formData.hasClearMeterAccess === false && (
                             <div className="mt-2 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                               <p>
-                                If your energy distributor needs to access the
-                                meter but cannot do so safely, your connection
-                                may be delayed, and additional charges may
-                                apply.
+                                If your energy distributor needs to access the meter
+                                but cannot do so safely, your connection may be
+                                delayed, and additional charges may apply.
                               </p>
                             </div>
                           )}
                         </div>
+
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -1244,6 +1497,8 @@ export default function SignUpForm() {
                           We want to ensure you have the necessary support and
                           benefits.
                         </p>
+
+                        {/* Life Support Question */}
                         <p className="mb-2 text-[16px]">
                           Do you or anyone at the property rely on life support
                           equipment that requires electricity?
@@ -1278,14 +1533,17 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
                         {formData.lifeSupport && (
                           <p className="bg-yellow-100 text-sm text-gray-700 p-2 rounded mb-6">
-                            We’ll include a Life Support Form in your welcome
-                            pack for you and your medical practitioner to
-                            complete. If you have life support equipment powered
-                            by gas, please notify your current gas retailer.
+                            We’ll include a Life Support Form in your welcome pack
+                            for you and your medical practitioner to complete. If
+                            you have life support equipment powered by gas, please
+                            notify your current gas retailer.
                           </p>
                         )}
+
+                        {/* Concession Card Question */}
                         <p className="mb-2 text-[16px]">
                           Are you a Concession Card holder?
                         </p>
@@ -1319,12 +1577,15 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* Concession Card Details */}
                         {formData.isConcessionHolder && (
                           <>
                             <p className="text-sm text-gray-500 mb-4">
-                              (If yes, please provide your concession card
-                              details.)
+                              (If yes, please provide your concession card details.)
                             </p>
+
+                            {/* Concession Types (buttons) */}
                             <div className="mb-4">
                               <p className="font-semibold text-[16px] mb-2">
                                 Concession Type:
@@ -1356,6 +1617,8 @@ export default function SignUpForm() {
                                 ))}
                               </div>
                             </div>
+
+                            {/* Concession Card Number */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Number:
@@ -1365,10 +1628,14 @@ export default function SignUpForm() {
                                 name="concessionCardNumber"
                                 value={formData.concessionCardNumber}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                          text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                          placeholder-gray-400 outline-none"
                                 placeholder="e.g. 1234-5678-XX"
                               />
                             </div>
+
+                            {/* Concession Card Start Date */}
                             <div className="mb-4">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Start Date:
@@ -1378,10 +1645,14 @@ export default function SignUpForm() {
                                 name="concessionCardStartDate"
                                 value={formData.concessionCardStartDate}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                          text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                          placeholder-gray-400 outline-none"
                                 placeholder="DD/MM/YYYY"
                               />
                             </div>
+
+                            {/* Concession Card Expiry Date */}
                             <div className="mb-6">
                               <label className="block mb-1 text-[16px] font-semibold">
                                 Concession Card Expiry Date:
@@ -1391,18 +1662,22 @@ export default function SignUpForm() {
                                 name="concessionCardExpiryDate"
                                 value={formData.concessionCardExpiryDate}
                                 onChange={handleInputChange}
-                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600 placeholder-gray-400 outline-none"
+                                className="w-full border-0 border-b-2 border-blue-600 bg-transparent
+                          text-[16px] text-gray-900 focus:ring-0 focus:border-blue-600
+                          placeholder-gray-400 outline-none"
                                 placeholder="DD/MM/YYYY"
                               />
                             </div>
                           </>
                         )}
+
+                        {/* Next Step Button */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -1412,9 +1687,10 @@ export default function SignUpForm() {
                     {step.id === 8 && (
                       <>
                         <p className="mb-4 text-[20px]">
-                          We want to ensure you receive any eligible
-                          concessions.
+                          We want to ensure you receive any eligible concessions.
                         </p>
+
+                        {/* 1) Medical Cooling Concession */}
                         <p className="mb-2 text-[16px]">
                           Do you have a Medical Cooling Concession?
                         </p>
@@ -1448,12 +1724,15 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
                         {formData.medicalCoolingConcession && (
                           <p className="mb-4 text-sm text-gray-700 bg-yellow-100 p-2 rounded">
                             Please review the attached Concession Consent Script
                             before proceeding.
                           </p>
                         )}
+
+                        {/* 2) Concessioner Declaration */}
                         <p className="mb-2 text-[16px]">
                           Concessioner Declaration Provided?
                         </p>
@@ -1480,20 +1759,21 @@ export default function SignUpForm() {
                               }))
                             }
                             className={getToggleButtonClasses(
-                              formData.concessionerDeclarationProvided ===
-                                false,
+                              formData.concessionerDeclarationProvided === false,
                               false
                             )}
                           >
                             No
                           </Button>
                         </div>
+
+                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -1506,10 +1786,11 @@ export default function SignUpForm() {
                           Tell us how you&apos;d like to receive your bills and
                           updates.
                         </p>
+
+                        {/* 1) Consent to Electronic Bills? */}
                         <p className="mb-2 text-[16px]">
                           Do you consent to receiving bills, notices, and other
-                          documents related to your energy supply
-                          electronically?
+                          documents related to your energy supply electronically?
                         </p>
                         <div className="flex flex-wrap gap-2 mb-4">
                           <Button
@@ -1541,9 +1822,10 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* 2) All Communication Same Method? */}
                         <p className="mb-2 text-[16px]">
-                          Would you prefer all communication via the same
-                          method?
+                          Would you prefer all communication via the same method?
                         </p>
                         <div className="flex flex-wrap gap-2 mb-4">
                           <Button
@@ -1575,12 +1857,14 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* 3) Use Primary Contact Email? (only if all comm. same method is Yes) */}
                         {formData.allCommunicationSameMethod && (
                           <>
                             <p className="mb-2 text-[16px]">
-                              For account‑related notices, including your
-                              Welcome Pack, should we use your primary contact
-                              email address?
+                              For account‑related notices, including your Welcome
+                              Pack, should we use your primary contact email
+                              address?
                             </p>
                             <div className="flex flex-wrap gap-2 mb-4">
                               <Button
@@ -1614,6 +1898,8 @@ export default function SignUpForm() {
                             </div>
                           </>
                         )}
+
+                        {/* 4) Postal Address Correct? */}
                         <p className="mb-2 text-[16px]">
                           Is your postal address correct?
                         </p>
@@ -1647,12 +1933,14 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -1662,9 +1950,11 @@ export default function SignUpForm() {
                     {step.id === 10 && (
                       <>
                         <p className="mb-4 text-[20px]">
-                          A few final details about your billing and
-                          communication preferences..
+                          A few final details about your billing and communication
+                          preferences..
                         </p>
+
+                        {/* 1) Monthly Bills OK? */}
                         <p className="mb-2 text-[16px]">
                           We’ll send you bills monthly, based on meter reads
                           provided by your meter data provider. Is that OK?
@@ -1699,12 +1989,14 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* 2) Promotional Contact Consent */}
                         <p className="mb-2 text-[16px]">
                           We may contact you from time to time via phone, email,
                           SMS, or other means to promote products and offers,
-                          including gas and electricity offers from our
-                          associated partners. You can opt out at any time by
-                          letting us know. Do you agree?
+                          including gas and electricity offers from our associated
+                          partners. You can opt out at any time by letting us know.
+                          Do you agree?
                         </p>
                         <div className="flex flex-wrap gap-2 mb-6">
                           <Button
@@ -1736,12 +2028,14 @@ export default function SignUpForm() {
                             No
                           </Button>
                         </div>
+
+                        {/* Next Step */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
@@ -1754,9 +2048,13 @@ export default function SignUpForm() {
                           Please review the Electricity Market Offer Contract
                           Summary and EIC Script before completing your sign-up.
                         </p>
+
+                        {/* Button: Market Offer Contract Summary */}
                         <div className="mb-4">
                           <Button
                             onClick={() => {
+                              // e.g., open a modal or PDF link
+                              // setFormData((prev) => ({ ...prev, hasReviewedMarketOfferSummary: true }));
                               alert("Opening Market Offer Contract Summary...");
                             }}
                             className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
@@ -1764,13 +2062,17 @@ export default function SignUpForm() {
                             Electricity Market Offer Contract Summary
                           </Button>
                           <p className="mt-2 text-sm text-gray-700">
-                            Sales agent provides a summary of the contract
-                            terms, including rates, fees, and conditions.
+                            Sales agent provides a summary of the contract terms,
+                            including rates, fees, and conditions.
                           </p>
                         </div>
+
+                        {/* Button: EIC Script */}
                         <div className="mb-6">
                           <Button
                             onClick={() => {
+                              // e.g., open a modal or PDF link
+                              // setFormData((prev) => ({ ...prev, hasReviewedEICScript: true }));
                               alert("Opening EIC Script...");
                             }}
                             className="bg-yellow-400 hover:bg-yellow-500 text-[#1951A4] text-[16px] font-normal"
@@ -1779,39 +2081,64 @@ export default function SignUpForm() {
                           </Button>
                           <p className="mt-2 text-sm text-gray-700">
                             Sales agent reads the EIC script, confirming the
-                            customer’s understanding and agreement to the
-                            contract terms.
+                            customer’s understanding and agreement to the contract
+                            terms..
                           </p>
                         </div>
+
+                        {/* Next Step (or final) */}
                         <div className="flex justify-center">
                           <Button
                             onClick={handleNextStep}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
-                            Next Step
+                            Next 
                           </Button>
                         </div>
                       </>
                     )}
 
+                    {/* PLACEHOLDER for STEPS 6..11 (unchanged)
+                  {![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(step.id) &&
+                    !step.isFinal && (
+                      <>
+                        <p className="mb-6 text-[20px]">
+                          Content for <strong>{step.title}</strong> goes here.
+                        </p>
+                        <div className="flex justify-center">
+                          <Button
+                            onClick={handleNextStep}
+                            className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
+                          >
+                            Next 
+                          </Button>
+                        </div>
+                      </>
+                    )} */}
+
                     {/* Final Step */}
                     {step.isFinal && (
                       <>
+                        {/* Sub-heading or instructions */}
                         <p className="mb-3 text-[20px]">
                           Review all your details and confirm they are correct.
                         </p>
+
+                        {/* Confirm & Submit Button */}
                         <div className="flex mb-4">
                           <Button
-                            onClick={() => alert("Submitting...")}
+                            onClick={handleSave}
                             className="bg-[#1951A4] hover:bg-[#164685] text-white text-[16px]"
                           >
                             Confirm &amp; Submit
                           </Button>
                         </div>
+
+                        {/* Completion note */}
                         <p className="text-[16px] text-gray-700">
                           That&apos;s it! Your sign-up is complete. You&apos;ll
-                          receive a confirmation shortly. If you have any
-                          questions, feel free to contact us.
+                          receive a confirmation shortly. If you have any questions,
+                          feel free to contact us.
                         </p>
                       </>
                     )}
@@ -1821,6 +2148,13 @@ export default function SignUpForm() {
             );
           })}
         </div>
+        {/* <div className="form-field mt-10">
+          <div className="button-group">
+            <button style={{margin: "0 auto"}} type="submit" 
+              className="save-button bg-blue-500 text-white px-6 py-3 text-lg font-bold rounded-lg w-full max-w-xs mx-auto block" 
+              onClick={handleSave}>Save</button>
+          </div>
+        </div> */}
       </main>
     </div>
   );

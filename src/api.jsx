@@ -3,7 +3,6 @@ import config from "./config"; // Import base URL
 import AuthContext from "./context/AuthContext"; // Import AuthContext
 import { useContext } from "react";
 
-console.log(config)
 // ✅ API instance with base URL
 const api = axios.create({
   baseURL: config.API_BASE_URL,

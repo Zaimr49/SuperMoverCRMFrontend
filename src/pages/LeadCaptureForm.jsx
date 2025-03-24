@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import "./LeadCaptureForm.css";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import "../styles/LeadCaptureForm.css";
+import api from "../api";
+import Sidebar from "../components/Sidebar"; // Import Sidebar
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from "../utils/alerts";
 import {
   Check,
   ChevronDown,
@@ -9,45 +13,32 @@ import {
   ChevronRight,
   Calendar,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar";
 
 const LeadCaptureForm = () => {
-  // New state for the first four fields and error messages
+  const [agentName, setAgentName] = useState("");
+  const [agencyName, setAgencyName] = useState("");
   const [firstName, setFirstName] = useState("");
-  const [firstNameError, setFirstNameError] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [lastNameError, setLastNameError] = useState("");
+  const [secondName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [phoneMobile, setPhoneMobile] = useState("");
-  const [phoneMobileError, setPhoneMobileError] = useState("");
-
-  // Existing state for the rest of the form
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [mobile, setContactNumber] = useState("");
   const [billingAddress, setBillingAddress] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [streetNumber, setStreetNumber] = useState(""); 
+  const [streetAddress, setStreetAddress] = useState("");
+  const [suburb, setSuburb] = useState("");
+  const [postcode, setPostcode] = useState("");
+  const [state, setState] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState({
+    gas: false,
+    electricity: false,
+  });
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState({
-    electricity: false,
-    gas: false,
-    water: false,
-    broadband: false,
-  });
-  const [streetAddress, setStreetAddress] = useState("Auto populate");
-  const [suburb, setSuburb] = useState("Auto populate");
-  const [postCode, setPostCode] = useState("Auto populate");
-  const [stateName, setStateName] = useState("Auto populate");
-  const [reaOfficeDetails, setReaOfficeDetails] = useState("");
-  const [referredAgentName, setReferredAgentName] = useState("");
-  const [reaSoftwareUsed, setReaSoftwareUsed] = useState("");
-  const [nmi, setNmi] = useState("");
-  const [mirn, setMirn] = useState("");
-  const [nmiError, setNmiError] = useState("");
-  const [mirnError, setMirnError] = useState("");
 
+  const location = useLocation();
+  const leadDataToEdit = location.state?.lead;
   const navigate = useNavigate();
 
   const monthNames = [
@@ -65,59 +56,133 @@ const LeadCaptureForm = () => {
     "December",
   ];
 
-  // Simple field validation function
-  const validateFields = () => {
-    let isValid = true;
-    if (firstName.trim() === "") {
-      setFirstNameError("First Name is required.");
-      isValid = false;
+  useEffect(() => {
+    if(leadDataToEdit){
+      setAgentName(leadDataToEdit.referringAgent?.name || "");
+      setAgencyName(leadDataToEdit.referringAgency?.name || "");
+      setFirstName(leadDataToEdit.tenant?.firstName || "");
+      setLastName(leadDataToEdit.tenant?.secondName || "");
+      setEmail(leadDataToEdit.tenant?.email || "");
+      setContactNumber(leadDataToEdit.tenant?.mobile || "");
+      setBillingAddress(leadDataToEdit.address?.text || "");
+      setStreetNumber(leadDataToEdit.address?.streetNumber || "");
+      setStreetAddress(leadDataToEdit.address?.streetName || "");
+      setSuburb(leadDataToEdit.address?.locality || "");
+      setPostcode(leadDataToEdit.address?.postCode?.toString() || "");
+      setState(leadDataToEdit.address?.state || "");
+      setSelectedProducts({
+        gas: leadDataToEdit.services?.gas || false,
+        electricity: leadDataToEdit.services?.electricity || false,
+      });
+      setSelectedDate(
+        leadDataToEdit.leaseStartDate ? new Date(leadDataToEdit.leaseStartDate) : new Date()
+      );
     }
-    if (lastName.trim() === "") {
-      setLastNameError("Last Name is required.");
-      isValid = false;
-    }
-    if (phoneMobile.trim() === "") {
-      setPhoneMobileError("Mobile number is required.");
-      isValid = false;
-    }
-    if (email.trim() !== "" && !/^\S+@\S+\.\S+$/.test(email)) {
-      setEmailError("Invalid email format.");
-      isValid = false;
-    }
-
-    // Validate NMI if electricity is selected
-    if (selectedProducts.electricity) {
-      if (!nmi.trim()) {
-        setNmiError("Required");
-        isValid = false;
-      } else if (!/^\d{10,11}$/.test(nmi.trim())) {
-        setNmiError("NMI must be 10–11 digits.");
-        isValid = false;
-      } else {
-        setNmiError("");
-      }
-    }
-
-    // Validate MIRN if gas is selected
-    if (selectedProducts.gas) {
-      if (!mirn.trim()) {
-        setMirnError("Required");
-        isValid = false;
-      } else if (!/^\d{10,11}$/.test(mirn.trim())) {
-        setMirnError("MIRN must be 10–11 digits.");
-        isValid = false;
-      } else {
-        setMirnError("");
-      }
-    }
-
-    return isValid;
-  };
+  }, [leadDataToEdit]);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
     setShowCalendar(false);
   };
+
+  const createPayload = () => {
+    const payload = {
+      tenant: {
+        firstName: firstName,
+        secondName: secondName,
+        email: email,
+        mobile: mobile,
+      },
+      address: {
+        text: billingAddress,
+        unit: "", // Add unit if applicable
+        streetNumber: streetNumber,
+        streetName: streetAddress,
+        locality: suburb,
+        postCode: parseInt(postcode, 10),
+        state: state,
+        city: "", // Add city if needed
+        country: "", // Add country if needed
+      },
+      referringAgent: {
+        name: agentName,
+        email: "", // Add email if available
+        partnerCode: "", // Add partnerCode if available
+      },
+      referringAgency: {
+        name: agencyName,
+        email: "", // Add email if available
+        partnerCode: "", // Add partnerCode if available
+      },
+      services: {
+        gas: selectedProducts.gas,
+        electricity: selectedProducts.electricity,
+        internet: false,
+        telephone: false,
+        payTV: false,
+        cleaning: false,
+        removalist: false,
+        movingBoxes: false,
+        vehicleHire: false,
+        water: false,
+      },
+      submitted: new Date().toISOString(),
+      leaseStartDate: selectedDate.toISOString().split("T")[0],
+      renewal: false,
+    };
+    return payload;
+  }
+
+  const handleSave = async (e, forConvert=false) => {
+    e.preventDefault();
+  
+    const payload = createPayload()
+  
+    try {
+      const response = await api.post("/crm/flk/save-lead/", payload);
+      if(forConvert){
+        return response.data;
+      }else{
+        if(response.data.done){
+          showSuccessAlert("Leads saved successfully !")
+          // clearForm()
+        }else{
+          showErrorAlert("Operation not succeed !")
+        }
+      }
+    } catch (error) {
+      console.error("Submission failed:", error.response?.data || error.message);
+      showErrorAlert(error.response?.data || error.message)
+    }
+  };
+
+  const handleConvert = async (e) => {
+    // e.preventDefault();
+    const resp = await handleSave(e, true)
+    if(resp.done){
+      navigate("/signup-form", { state: { lead: resp.data } });
+    }else{
+      showErrorAlert("Operation not succeed !")
+    }
+  }
+
+  const clearForm = () => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setContactNumber("");
+    setBillingAddress("");
+    setStreetAddress(""); 
+    setSuburb("");
+    setPostcode("");
+    setState("");
+    setAgentName("");
+    setAgencyName("");
+    setSelectedProducts({ electricity: false, gas: false });
+    setSelectedDate(new Date()); // Reset to current date
+    setShowCalendar(false);
+    setShowAgentDropdown(false);
+  }
 
   const toggleProduct = (product) => {
     // Water and broadband are disabled for Phase 1.
@@ -175,25 +240,28 @@ const LeadCaptureForm = () => {
     return days;
   };
 
-  // Fetch address suggestions from the backend as the user types
+  const handleSuggestionClick = (item) => {
+    setBillingAddress(item.display_name);
+    const addr = item.address || {};
+    setStreetAddress(addr.road || "Auto populate");
+    setSuburb(addr.suburb || addr.city || addr.town || "Auto populate");
+    setPostcode(addr.postcode || "Auto populate")
+    setState(addr.state || "Auto populate")
+    // setPostCode(addr.postcode || "Auto populate");
+    // setStateName(addr.state || "Auto populate");
+
+    setAddressSuggestions([]);
+  };
+
   const handleBillingAddressChange = async (e) => {
     const value = e.target.value;
     setBillingAddress(value);
 
     if (value.length >= 3) {
       try {
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/leads/address-autocomplete/?query=${encodeURIComponent(
-            value
-          )}`
-        );
-        if (response.ok) {
-          const suggestions = await response.json();
-          setAddressSuggestions(suggestions);
-        } else {
-          console.error("Error fetching suggestions:", response.statusText);
-          setAddressSuggestions([]);
-        }
+        const response = await api.get(`/crm/address-autocomplete/?query=${encodeURIComponent(value)}`);
+        const suggestions = response.data;
+        setAddressSuggestions(suggestions);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         setAddressSuggestions([]);
@@ -203,138 +271,13 @@ const LeadCaptureForm = () => {
     }
   };
 
-  const handleSuggestionClick = (item) => {
-    setBillingAddress(item.display_name);
-    const addr = item.address || {};
-    setStreetAddress(addr.road || "Auto populate");
-    setSuburb(addr.suburb || addr.city || addr.town || "Auto populate");
-    setPostCode(addr.postcode || "Auto populate");
-    setStateName(addr.state || "Auto populate");
-    setAddressSuggestions([]);
-  };
-
-  // Save the current form data (example: using localStorage)
-  // const handleSave = () => {
-  //   if (!validateFields()) {
-  //     alert("Please correct the errors in the form.");
-  //     return;
-  //   }
-  //   const data = {
-  //     firstName,
-  //     lastName,
-  //     email,
-  //     phoneMobile,
-  //     billingAddress,
-  //     streetAddress,
-  //     suburb,
-  //     postCode,
-  //     stateName,
-  //     selectedProducts,
-  //     moveInDate: selectedDate,
-  //   };
-  //   localStorage.setItem("leadData", JSON.stringify(data));
-  //   alert("Data saved!");
-  // };
-
-  // Navigate to the signup form page
-  // const handleConnect = () => {
-  //   if (!validateFields()) {
-  //     alert("Please correct the errors in the form.");
-  //     return;
-  //   }
-  //   const data = {
-  //     firstName,
-  //     lastName,
-  //     email,
-  //     phoneMobile,
-  //     billingAddress,
-  //     streetAddress,
-  //     suburb,
-  //     postCode,
-  //     stateName,
-  //     selectedProducts,
-  //     moveInDate: selectedDate,
-  //     reaOfficeDetails,
-  //     referredAgentName,
-  //     reaSoftwareUsed,
-  //     // Add any additional fields here...
-  //   };
-  //   navigate("/signup-form", { state: data });
-  // };
-
-  // Save the current form data (example: using localStorage)
-  const handleSave = () => {
-    if (!validateFields()) {
-      alert("Please correct the errors in the form.");
-      return;
-    }
-    const data = {
-      firstName,
-      lastName,
-      email,
-      phoneMobile,
-      billingAddress,
-      streetAddress,
-      suburb,
-      postCode,
-      stateName,
-      selectedProducts,
-      moveInDate: selectedDate,
-      nmi, // <--- add
-      mirn, // <--- add
-    };
-    localStorage.setItem("leadData", JSON.stringify(data));
-    alert("Data saved!");
-  };
-
-  // Navigate to the signup form page
-  const handleConnect = () => {
-    if (!validateFields()) {
-      alert("Please correct the errors in the form.");
-      return;
-    }
-    const data = {
-      firstName,
-      lastName,
-      email,
-      phoneMobile,
-      billingAddress,
-      streetAddress,
-      suburb,
-      postCode,
-      stateName,
-      selectedProducts,
-      moveInDate: selectedDate,
-      reaOfficeDetails,
-      referredAgentName,
-      reaSoftwareUsed,
-      nmi, // <--- add
-      mirn, // <--- add
-    };
-    navigate("/signup-form", { state: data });
-  };
-
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <Sidebar
-        style={{ width: "25%" }}
-        className="w-1/4 h-screen fixed md:relative"
-      />
+      <Sidebar style={{width: "25%"}} className="w-1/4 h-screen fixed md:relative" /> 
 
-      {/* Main Content */}
-      <main
-        className="flex-1 overflow-y-auto h-screen"
-        style={{ width: "75%" }}
-      >
-        <div className="lead-capture-form relative">
-          {/* Back button in top-right corner */}
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="back-button"
-          >
-            Back
-          </button>
+      <main className="flex-1 ml-1/4 overflow-y-auto h-screen" style={{width: "75%"}}>
+        <div className="lead-capture-form">
           <h1 className="form-title">Lead Capture Form</h1>
 
           {/* Step 1: Customer Details */}
@@ -344,70 +287,33 @@ const LeadCaptureForm = () => {
             </h2>
             <div className="form-fields-grid">
               <div className="form-field">
-                <label>
-                  <span class="text-sm text-red-500">*</span>
-                  First Name:
-                </label>
+                <label>First Name:</label>
                 <input
                   type="text"
                   placeholder="Enter your first name"
                   value={firstName}
-                  onChange={(e) => {
-                    setFirstName(e.target.value);
-                    if (e.target.value.trim() !== "") setFirstNameError("");
-                  }}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
-                {firstNameError && (
-                  <span className="error-message" style={{ color: "red" }}>
-                    {firstNameError}
-                  </span>
-                )}
               </div>
+
               <div className="form-field">
-                <label>
-                  <span class="text-sm text-red-500">*</span>Last Name:
-                </label>
+                <label>Last Name:</label>
                 <input
                   type="text"
                   placeholder="Enter your last name"
-                  value={lastName}
-                  onChange={(e) => {
-                    setLastName(e.target.value);
-                    if (e.target.value.trim() !== "") setLastNameError("");
-                  }}
+                  value={secondName}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
-                {lastNameError && (
-                  <span className="error-message" style={{ color: "red" }}>
-                    {lastNameError}
-                  </span>
-                )}
               </div>
+
               <div className="form-field">
-                <label>
-                  <span class="text-sm text-red-500">*</span>Contact Number:
-                </label>
+                <label>Contact Number:</label>
                 <input
                   type="text"
                   placeholder="Enter your contact number"
-                  value={phoneMobile}
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    // If any non-digit is detected, show error.
-                    if (/[^0-9]/.test(inputValue)) {
-                      setPhoneMobileError("Only numbers are allowed.");
-                    } else {
-                      setPhoneMobileError("");
-                    }
-                    // Remove non-digit characters and update state.
-                    const numericValue = inputValue.replace(/\D/g, "");
-                    setPhoneMobile(numericValue);
-                  }}
+                  value={mobile}
+                  onChange={(e) => setContactNumber(e.target.value)}
                 />
-                {phoneMobileError && (
-                  <span className="error-message" style={{ color: "red" }}>
-                    {phoneMobileError}
-                  </span>
-                )}
               </div>
 
               <div className="form-field">
@@ -416,20 +322,8 @@ const LeadCaptureForm = () => {
                   type="email"
                   placeholder="Enter your email address"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (
-                      e.target.value.trim() === "" ||
-                      /^\S+@\S+\.\S+$/.test(e.target.value)
-                    )
-                      setEmailError("");
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
-                {emailError && (
-                  <span className="error-message" style={{ color: "red" }}>
-                    {emailError}
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -439,20 +333,22 @@ const LeadCaptureForm = () => {
             <h2 className="section-title">
               Step 2: <span className="section-subtitle">Move-In Address</span>
             </h2>
+
+            {/* We still use a grid, but the Billing Address will span both columns */}
             <div className="form-fields-grid">
+              {/* Billing Address: Full-width */}
               <div className="form-field billing-address">
                 <label>Billing Address:</label>
-                <div className="relative bg-yellow-400 rounded-md p-2 mt-1">
+                <div className="billing-address-input">
                   <input
                     type="text"
                     value={billingAddress}
                     onChange={handleBillingAddressChange}
-                    className="bg-transparent border-none outline-none w-[calc(100%-30px)] font-medium"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <div className="check-icon">
                     <Check size={20} color="#000" />
                   </div>
-                  <div className="text-xs text-right mt-1">Map Reference</div>
+                  <div className="map-reference">Map Reference</div>
                   {addressSuggestions.length > 0 && (
                     <ul className="absolute left-0 top-full mt-1 w-full max-h-48 overflow-y-auto border border-gray-300 bg-white z-50 list-none p-0">
                       {addressSuggestions.map((suggestion, index) => (
@@ -468,21 +364,42 @@ const LeadCaptureForm = () => {
                   )}
                 </div>
               </div>
+
+              {/* The following fields are in two columns */}
               <div className="form-field">
                 <label>Street Address:</label>
-                <input type="text" value={streetAddress} readOnly />
+                <input
+                    type="text"
+                    value={streetAddress}
+                    onChange={(e) => setStreetAddress(e.target.value)}
+                  />
               </div>
+
               <div className="form-field">
                 <label>Suburb:</label>
-                <input type="text" value={suburb} readOnly />
+                <input
+                  type="text"
+                  value={suburb}
+                  onChange={(e) => setSuburb(e.target.value)}
+                />
               </div>
+
               <div className="form-field">
                 <label>Postcode:</label>
-                <input type="text" value={postCode} readOnly />
+                <input
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                />
               </div>
+
               <div className="form-field">
                 <label>State:</label>
-                <input type="text" value={stateName} readOnly />
+                <input
+                  type="text"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                />
               </div>
             </div>
 
@@ -976,6 +893,7 @@ const LeadCaptureForm = () => {
                   </span>
                   <Calendar size={20} color="#fff" />
                 </div>
+
                 {showCalendar && (
                   <div className="calendar">
                     <div className="calendar-header">
@@ -996,6 +914,7 @@ const LeadCaptureForm = () => {
                         onClick={() => changeMonth(1)}
                       />
                     </div>
+
                     <div className="calendar-days">
                       <div className="weekday">Su</div>
                       <div className="weekday">Mo</div>
@@ -1004,6 +923,7 @@ const LeadCaptureForm = () => {
                       <div className="weekday">Th</div>
                       <div className="weekday">Fr</div>
                       <div className="weekday">Sa</div>
+
                       {renderCalendarDays()}
                     </div>
                   </div>
@@ -1021,52 +941,22 @@ const LeadCaptureForm = () => {
               </span>
             </h2>
             <div className="form-fields-grid">
-              {/* <div className="form-field">
-                <label>REA Office Details:</label>
-                <input type="text" placeholder="Test" />
-              </div>
-              <div className="form-field">
-                <label>Referred Agent Name:</label>
-                <input type="text" placeholder="Test" />
-              </div>
-              <div className="form-field">
-                <label>
-                  REA Software Used (if known):
-                  <br />
-                  (Optional: Name of software used by the REA)
-                </label>
-                <input type="text" placeholder="Test" />
-              </div> */}
               <div className="form-field">
                 <label>REA Office Details:</label>
-                <input
-                  type="text"
-                  placeholder="Enter office details"
-                  value={reaOfficeDetails}
-                  onChange={(e) => setReaOfficeDetails(e.target.value)}
-                />
+                <input type="text" placeholder="Test" value={agencyName} onChange={(e) => setAgencyName(e.target.value)}/>
               </div>
+
               <div className="form-field">
                 <label>Referred Agent Name:</label>
-                <input
-                  type="text"
-                  placeholder="Enter agent name"
-                  value={referredAgentName}
-                  onChange={(e) => setReferredAgentName(e.target.value)}
-                />
+                <input type="text" placeholder="Test" value={agentName}  onChange={(e) => setAgentName(e.target.value)}/>
               </div>
+
               <div className="form-field">
                 <label>
-                  REA Software Used (if known):
-                  <br />
-                  (Optional: Name of software used by the REA)
+                  REA Software Used (if known): (Optional: Name of software used by
+                  the REA)
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter software name"
-                  value={reaSoftwareUsed}
-                  onChange={(e) => setReaSoftwareUsed(e.target.value)}
-                />
+                <input type="text" placeholder="Test" />
               </div>
             </div>
           </div>
@@ -1079,40 +969,32 @@ const LeadCaptureForm = () => {
             <div className="form-field">
               <label>Internal Use</label>
               <div className="assign-lead-dropdown">
-                <div
-                  className="assign-lead-button"
-                  onClick={() => setShowAgentDropdown(!showAgentDropdown)}
-                >
-                  Assign Lead
-                  <ChevronDown size={20} color="white" />
-                </div>
+                <div className="button-group"> {/* Wrapper for flexbox */}
+                  <div
+                    className="assign-lead-button"
+                    onClick={() => setShowAgentDropdown(!showAgentDropdown)}
+                  >
+                    Assign Lead
+                    <ChevronDown size={20} color="white" />
+                  </div>
+                  </div>
                 {showAgentDropdown && (
                   <div className="agent-dropdown">
                     <div className="agent-option">( Select Agent )</div>
                   </div>
                 )}
               </div>
+              <div className="d-flex text-right">
+                <button style={{marginRight: "1rem"}} type="submit" className="save-button"  onClick={handleSave}>Save</button>
+                <button className="convert-button" onClick={handleConvert} >Convert</button>
+              </div>
             </div>
           </div>
 
-          {/* Save and Convert Buttons */}
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-gray-500 text-white rounded mr-2"
-            >
-              Save
-            </button>
-            <button
-              onClick={handleConnect}
-              className="px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              Convert
-            </button>
-          </div>
         </div>
       </main>
     </div>
+
   );
 };
 
