@@ -10,6 +10,9 @@ import {  FaUserCheck, FaDesktop } from "react-icons/fa";
 import { FiArrowUp, FiArrowDown } from "react-icons/fi";
 import DataTable from "react-data-table-component";
 import '../styles/Dashboard.css'
+import electricityIcon from '../assets/electricity.png';
+import gasIcon from '../assets/gas.png';
+
 
 
 const statuses = ["New", "First Call Attempt", "Call Attempt", "Invalid Lead", "No Sale", "Organised", "Follow Up", "(EC) Script", "Sale"];
@@ -93,12 +96,44 @@ const Dashboard = () => {
     return formattedDate
   }
 
+  // const getProducts = (services) => {
+  //   return Object.keys(services)
+  //   .filter(key => services[key]) // Filter only keys with true values
+  //   .join(", "); // Join them with a comma
+  // }
   const getProducts = (services) => {
-    return Object.keys(services)
-    .filter(key => services[key]) // Filter only keys with true values
-    .join(", "); // Join them with a comma
-  }
-
+    return (
+      <div className="flex space-x-2">
+        {Object.keys(services)
+          .filter(key => services[key])
+          .map(key => {
+            switch (key) {
+              case 'electricity':
+                return (
+                  <img
+                    key={key}
+                    src={electricityIcon}
+                    alt="Electricity"
+                    className="w-6 h-6"
+                  />
+                );
+              case 'gas':
+                return (
+                  <img
+                    key={key}
+                    src={gasIcon}
+                    alt="Gas"
+                    className="w-6 h-6"
+                  />
+                );
+              default:
+                return <span key={key}>{key}</span>;
+            }
+          })}
+      </div>
+    );
+  };
+  
   const handleStatusChange = (id, newStatus) => {
     setLeads(leads.map(lead => (lead.id === id ? { ...lead, status: newStatus } : lead)));
     setSelectedStatus({ ...selectedStatus, [id]: newStatus });
