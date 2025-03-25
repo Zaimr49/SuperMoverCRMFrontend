@@ -96,11 +96,6 @@ const Dashboard = () => {
     return formattedDate
   }
 
-  // const getProducts = (services) => {
-  //   return Object.keys(services)
-  //   .filter(key => services[key]) // Filter only keys with true values
-  //   .join(", "); // Join them with a comma
-  // }
   const getProducts = (services) => {
     return (
       <div className="flex space-x-2">

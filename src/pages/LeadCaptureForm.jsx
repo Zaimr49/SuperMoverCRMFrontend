@@ -279,8 +279,8 @@ const LeadCaptureForm = () => {
       submitted: new Date().toISOString(),
       leaseStartDate: selectedDate.toISOString().split("T")[0],
       renewal: false,
-      nmi: nmi,
-      mirn: mirn,
+      // nmi: nmi,
+      // mirn: mirn,
     };
   };
 
